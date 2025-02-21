@@ -1,0 +1,837 @@
+@font-face {
+    font-family: 'Paris2024';
+    src: url('../assets/Paris2024.ttf') format('truetype');
+}
+
+/* Reset et variables */
+:root {
+    --primary-color: #1C1CAD;
+    --secondary-color: #FF2C55;
+    --background-color: #f5f5f5;
+    --text-color: #333;
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --font-paris: 'Paris2024', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header et Navigation */
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+#auth-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+#user-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+h1, h2, .match-header .vs {
+    font-family: var(--font-paris);
+}
+
+.jo-logo {
+    height: 40px;
+    width: auto;
+    transition: transform 0.3s ease;
+}
+
+.jo-logo:hover {
+    transform: scale(1.1);
+}
+
+#username {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Boutons de navigation et authentification */
+.auth-btn, .nav-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-paris);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.auth-btn:hover, .nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nav-btn {
+    background-color: transparent;
+    border: 2px solid white;
+}
+
+.nav-btn:hover {
+    background-color: white;
+    color: var(--primary-color);
+}
+
+/* Bouton de déconnexion */
+#logout-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-paris);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#logout-btn:hover {
+    background-color: #ff1a43;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+#logout-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+    background-color: #ff0033;
+}
+
+main {
+    flex: 1;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.matches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.match-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.match-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.match-header .team {
+    font-family: var(--font-paris);
+    font-weight: bold;
+    font-size: 1.1rem;
+    flex: 1;
+    text-align: center;
+}
+
+.match-header .vs {
+    color: var(--secondary-color);
+    font-weight: bold;
+    margin: 0 1rem;
+}
+
+.match-info {
+    margin-bottom: 1rem;
+}
+
+.match-info .stadium {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.match-info .date {
+    color: var(--primary-color);
+    font-weight: bold;
+    margin-top: 0.5rem;
+}
+
+.buy-ticket-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-paris);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.buy-ticket-btn:hover {
+    background-color: #ff1a43;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.buy-ticket-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: var(--secondary-color);
+}
+
+/* Formulaires */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(28, 28, 173, 0.1);
+}
+
+.password-help {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+/* Style pour le message d'alerte de connexion */
+.login-alert {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.alert-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+}
+
+.alert-icon {
+    font-size: 1.5rem;
+}
+
+/* Catégories de tickets */
+.category-options {
+    display: grid;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.category-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.category-option:hover {
+    background-color: #f8f8f8;
+    border-color: var(--primary-color);
+}
+
+.category-option input[type="radio"] {
+    display: none;
+}
+
+.category-option label {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+}
+
+.category-option input[type="radio"]:checked + label {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.quantity-select {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.quantity-select select {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+}
+
+/* Styles des tickets */
+.ticket-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.ticket-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Style des notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    padding: 15px 30px;
+    border-radius: 5px;
+    z-index: 1000;
+    transition: transform 0.5s ease;
+    color: white;
+    font-weight: bold;
+}
+
+.notification.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+.notification.success {
+    background-color: #28a745;
+}
+
+.notification.error {
+    background-color: #dc3545;
+}
+
+.notification.info {
+    background-color: #17a2b8;
+}
+
+
+/* Style pour le ripple effect lors du clic */
+
+
+
+
+/* Style pour les boutons dans le panier */
+.cart-item-actions .remove-btn {
+    padding: 8px 16px;
+    background-color: #ff2c55;  /* Rouge */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.cart-item-actions .remove-btn:hover {
+    background-color: #ff1a43;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Style pour le bouton Valider la commande */
+#checkout-btn {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: #1C1CAD;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 20px;
+}
+
+#checkout-btn:hover {
+    background-color: #1515a0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Style pour les éléments du panier */
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.item-total {
+    font-weight: bold;
+    color: #1C1CAD;
+    font-size: 16px;
+}
+
+/* Style pour le total du panier */
+.cart-summary {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+}
+
+.cart-summary p {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: right;
+    margin-bottom: 15px;
+}
+
+#cart-total {
+    color: #1C1CAD;
+    font-size: 20px;
+}
+
+/* Styles pour le bouton "Mes Billets" */
+#tickets-btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-paris);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#tickets-btn:hover {
+    background-color: #1515a0; /* Un ton plus foncé de la couleur primaire */
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+#tickets-btn:before {
+    content: '🎫'; /* Emoji de ticket */
+    font-size: 1rem;
+}
+
+/* Style pour le bouton Panier */
+/* Style pour le bouton Panier */
+#cart-btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-paris);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#cart-btn:hover {
+    background-color: #1515a0; /* Un ton plus foncé de la couleur primaire */
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+#cart-btn:before {
+    content: '🛒'; /* Emoji de panier */
+    font-size: 1rem;
+}
+
+#add-to-cart-btn {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: #1C1CAD;  /* Couleur primaire */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+#add-to-cart-btn:hover {
+    background-color: #1515a0;  /* Version plus foncée */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#add-to-cart-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+#add-to-cart-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Style pour le ripple effect lors du clic */
+#add-to-cart-btn:after {
+    content: '';
+    display: block;
+    position: absolute;
+    border-radius: 4px;
+    left: 0;
+    top:0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: all 0.5s;
+    box-shadow: 0 0 10px 20px white;
+}
+
+#add-to-cart-btn:active:after {
+    box-shadow: 0 0 0 0 white;
+    position: absolute;
+    border-radius: 4px;
+    left: 0;
+    top:0;
+    opacity: 1;
+    transition: 0s;
+}
+
+#cart-count {
+    background-color: var(--secondary-color);
+    color: white;
+    border-radius: 50%;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.7rem;
+    margin-left: 0.5rem;
+    min-width: 20px;
+    text-align: center;
+    display: inline-block;
+}
+
+#cart-count {
+    background-color: white;
+    color: var(--secondary-color);
+    border-radius: 50%;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+    min-width: 20px;
+    text-align: center;
+    display: inline-block;
+}
+
+/* Style amélioré pour le bouton de téléchargement des billets */
+.view-ticket-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-paris);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.view-ticket-btn:before {
+    content: '👀'; /* Emoji de regard */
+    font-size: 1.2rem;
+}
+
+.view-ticket-btn:hover {
+    background-color: #1515a0; /* Un ton plus foncé de la couleur primaire */
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Structure globale des sections */
+.matches-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+}
+
+/* Section des matchs à venir */
+.upcoming-matches {
+    width: 100%;
+}
+
+.upcoming-matches .matches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+}
+
+/* Séparateur */
+.matches-divider {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 2rem 0;
+}
+
+.divider-line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: #ddd;
+}
+
+.divider-text {
+    font-family: var(--font-paris);
+    padding: 0 1rem;
+    color: #666;
+    font-size: 1.2rem;
+    white-space: nowrap;
+}
+
+/* Section des matchs terminés */
+.finished-matches {
+    width: 100%;
+}
+
+.finished-matches .matches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.finished-matches .match-card {
+    opacity: 0.8;
+    background-color: #f8f8f8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .upcoming-matches .matches-grid,
+    .finished-matches .matches-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
+/* Footer */
+footer {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: auto; /* Pour coller le footer en bas */
+    font-family: var(--font-paris);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+footer p {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Boutons de connexion et inscription */
+#login-form button, 
+#register-form button {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-paris);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+#login-form button:hover, 
+#register-form button:hover {
+    background-color: #ff1a43; /* Un ton plus foncé de la couleur secondaire */
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+#login-form button:disabled, 
+#register-form button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.switch-form {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.switch-form a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.switch-form a:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}

@@ -1,0 +1,147 @@
+{% extends "_base.html" %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Gestion des matchs</h2>
+    <!-- Bouton de déconnexion -->
+    <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" style="
+            background: #FF4C4C; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-size: 14px;">
+            Déconnexion
+        </button>
+    </form>
+</div>
+
+<div class="table-container">
+    <table>
+        <tr>
+            <th>Équipe domicile</th>
+            <th>Équipe extérieure</th>
+            <th>Stade</th>
+            <th>Date</th>
+            <th>Score Domicile</th>
+            <th>Score Extérieur</th>
+            <th>Vainqueur</th>
+            <th>Modifier</th>
+        </tr>
+        {% for event in events %}
+        <tr>
+
+            <!-- Sélection des équipes -->
+            <td>
+                <select id="team_home-{{ event.id }}">
+                    <option value="">??</option>
+                    {% for team in teams %}
+                    <option value="{{ team.id }}" {% if team.id == event.team_home.id %}selected{% endif %}>
+                        {{ team.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </td>
+
+            <td>
+                <select id="team_away-{{ event.id }}">
+                    <option value="">??</option>
+                    {% for team in teams %}
+                    <option value="{{ team.id }}" {% if team.id == event.team_away.id %}selected{% endif %}>
+                        {{ team.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </td>
+
+            <!-- Sélection du stade -->
+            <td>
+                <select id="stadium-{{ event.id }}">
+                    <option value="">??</option>
+                    {% for stadium in stadiums %}
+                    <option value="{{ stadium.id }}" {% if stadium.id == event.stadium.id %}selected{% endif %}>
+                        {{ stadium.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </td>
+
+            <!-- Date du match -->
+            <td>
+                <input type="datetime-local" id="start-{{ event.id }}" value="{% if event.start %}{{ event.start|date:'Y-m-d\TH:i' }}{% else %}??{% endif %}">
+            </td>
+
+            <!-- Scores des équipes -->
+            <td>
+                <input type="number" id="score_home-{{ event.id }}" 
+                       value="{% if event.score and '-' in event.score %}{{ event.score.split.0 }}{% else %}0{% endif %}" min="0">
+            </td>
+            <td>
+                <input type="number" id="score_away-{{ event.id }}" 
+                       value="{% if event.score and '-' in event.score %}{{ event.score.split.2 }}{% else %}0{% endif %}" min="0">
+            </td>
+            
+
+            <!-- Affichage du vainqueur -->
+            <td id="winner-{{ event.id }}">
+                {% if event.winner %}
+                    {{ event.winner.name }}
+                {% else %}
+                    ??
+                {% endif %}
+            </td>
+
+            <td>
+                <button onclick="updateMatch({{ event.id }})">Mettre à jour</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<script>
+    function updateMatch(eventId) {
+        const teamHome = document.getElementById(`team_home-${eventId}`).value;
+        const teamAway = document.getElementById(`team_away-${eventId}`).value;
+        const stadium = document.getElementById(`stadium-${eventId}`).value;
+        const start = document.getElementById(`start-${eventId}`).value;
+        const scoreHome = document.getElementById(`score_home-${eventId}`).value;
+        const scoreAway = document.getElementById(`score_away-${eventId}`).value;
+    
+        fetch(`/admin/update_event/${eventId}/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: `team_home=${teamHome}&team_away=${teamAway}&stadium=${stadium}&start=${start}&score_home=${scoreHome}&score_away=${scoreAway}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                // Met à jour les scores dans le DOM
+                document.getElementById(`score_home-${eventId}`).value = scoreHome;
+                document.getElementById(`score_away-${eventId}`).value = scoreAway;
+    
+                // Met à jour le vainqueur
+                let winnerField = document.getElementById(`winner-${eventId}`);
+                if (parseInt(scoreHome) > parseInt(scoreAway)) {
+                    winnerField.textContent = document.getElementById(`team_home-${eventId}`).selectedOptions[0].text;
+                } else if (parseInt(scoreAway) > parseInt(scoreHome)) {
+                    winnerField.textContent = document.getElementById(`team_away-${eventId}`).selectedOptions[0].text;
+                } else {
+                    winnerField.textContent = "Match nul";
+                }
+    
+                alert("Match mis à jour !");
+            } else {
+                alert("Erreur : " + data.message);
+            }
+        })
+        .catch(error => console.error("Erreur :", error));
+    }
+    </script>
+    
+{% endblock %}
