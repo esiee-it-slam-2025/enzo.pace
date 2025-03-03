@@ -1,0 +1,127 @@
+@font-face {
+    font-family: 'Paris2024';
+    src: url('../../mobile/assets/Paris2024.ttf') format('truetype');
+}
+
+:root {
+    --primary-color: #1C1CAD;
+    --secondary-color: #FF2C55;
+    --success-color: #28a745;
+    --error-color: #dc3545;
+    --background-color: #f5f5f5;
+    --font-paris: 'Paris2024', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--background-color);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    height: 60px;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-family: var(--font-paris);
+    color: var(--primary-color);
+}
+
+#reader {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.upload-section {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.upload-section input[type="file"] {
+    display: none;
+}
+
+.upload-section label {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.result-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+.valid-badge, .error-badge {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.valid-badge {
+    background-color: #d4edda;
+    color: var(--success-color);
+}
+
+.error-badge {
+    background-color: #f8d7da;
+    color: var(--error-color);
+}
+
+.ticket-details {
+    margin-top: 1rem;
+}
+
+.ticket-details h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.ticket-details p {
+    margin: 0.5rem 0;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    #reader {
+        width: 100%;
+    }
+}

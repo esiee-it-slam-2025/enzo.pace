@@ -13,6 +13,10 @@ import uuid
 def list_user_tickets(request):
     """Récupère tous les billets de l'utilisateur connecté"""
     tickets = Ticket.objects.filter(user=request.user).select_related('match')
+    
+    # Log pour vérifier les billets
+    print(f"Nombre de billets trouvés : {tickets.count()}")
+    
     tickets_data = []
     
     for ticket in tickets:
@@ -35,28 +39,18 @@ def list_user_tickets(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def buy_ticket(request):
-    """Achète un nouveau billet"""
     try:
         match_id = request.data.get('match_id')
         category = request.data.get('category')
         price = request.data.get('price')
 
-        # Vérifier que tous les champs requis sont présents
         if not all([match_id, category, price]):
             return Response({
                 "message": "Tous les champs sont requis"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Vérifier que la catégorie est valide
-        if category not in [choice[0] for choice in Ticket.CATEGORY_CHOICES]:
-            return Response({
-                "message": "Catégorie de billet invalide"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Récupérer le match
         match = get_object_or_404(Event, id=match_id)
 
-        # Créer le billet
         ticket = Ticket.objects.create(
             id=str(uuid.uuid4()),
             match=match,
@@ -81,18 +75,11 @@ def buy_ticket(request):
             }
         }, status=status.HTTP_201_CREATED)
 
-    except Event.DoesNotExist:
-        return Response({
-            "message": "Match non trouvé"
-        }, status=status.HTTP_404_NOT_FOUND)
-    except ValidationError as e:
+    except Exception as e:
         return Response({
             "message": str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        return Response({
-            "message": f"Une erreur est survenue: {str(e)}"
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 @api_view(['GET'])
 def verify_ticket(request, ticket_id):
     """Vérifie la validité d'un billet via son QR code"""
