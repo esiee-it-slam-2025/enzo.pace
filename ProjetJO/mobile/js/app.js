@@ -249,62 +249,41 @@ function addToCart(matchId, category, quantity, matchInfo) {
 }
 
 async function loadUserTickets() {
-    if (!currentUser) return;
-
-    try {
-        const response = await fetch("http://127.0.0.1:8000/api/tickets/", {
-            credentials: "include",
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        });
-
-        if (!response.ok) throw new Error('Erreur lors du chargement des billets');
-
-        const tickets = await response.json();
-        displayTickets(tickets);
-    } catch (error) {
-        console.error("Erreur:", error);
-        alert("Impossible de charger vos billets");
-    }
-}
-
-function displayTickets(tickets) {
-    const container = document.getElementById('tickets-container');
-    container.innerHTML = '';
-
-    if (tickets.length === 0) {
-        container.innerHTML = '<p class="no-tickets">Vous n\'avez pas encore de billets</p>';
+    if (!currentUser) {
+        console.log("Aucun utilisateur connecté, impossible de charger les billets");
         return;
     }
 
-    tickets.forEach(ticket => {
-        const ticketElement = document.createElement('div');
-        ticketElement.className = 'ticket-card';
-        ticketElement.dataset.ticketId = ticket.id;
+    try {
+        console.log("Tentative de chargement des billets pour l'utilisateur", currentUser.username);
         
-        const date = new Date(ticket.match.start).toLocaleString('fr-FR', {
-            dateStyle: 'long',
-            timeStyle: 'short'
+        const response = await fetch("http://127.0.0.1:8000/api/tickets/", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            }
         });
 
-        ticketElement.innerHTML = `
-            <div class="ticket-header">
-                <h3>${ticket.match.team_home || 'À déterminer'} vs ${ticket.match.team_away || 'À déterminer'}</h3>
-                <span class="ticket-category ${ticket.category.toLowerCase()}">${ticket.category}</span>
-            </div>
-            <div class="ticket-details">
-                <p><strong>Stade:</strong> ${ticket.match.stadium}</p>
-                <p><strong>Date:</strong> ${date}</p>
-                <p><strong>Prix:</strong> ${ticket.price}€</p>
-            </div>
-            <div class="qr-code" id="qr-${ticket.id}"></div>
-            <button onclick="handleTicket('${ticket.id}', this.closest('.ticket-card'))" class="view-ticket-btn">Voir le billet</button>
-        `;
+        console.log("Statut de la réponse:", response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Erreur serveur:", errorText);
+            throw new Error("Erreur lors du chargement des billets");
+        }
 
-        container.appendChild(ticketElement);
-        QRHandler.generateQRCode(ticket.qr_code_data, `qr-${ticket.id}`);
-    });
+        const tickets = await response.json();
+        console.log("Billets reçus:", tickets);
+        displayTickets(tickets);
+    } catch (error) {
+        console.error("Erreur:", error);
+        const container = document.getElementById('tickets-container');
+        if (container) {
+            container.innerHTML = '<p class="error-message">Impossible de charger vos billets. Veuillez réessayer plus tard.</p>';
+        }
+    }
 }
 
 function closeModal(modalId) {

@@ -22,148 +22,120 @@ body {
     font-family: Arial, sans-serif;
     background-color: var(--background-color);
     min-height: 100vh;
-}
-
-.container {
-    max-width: 800px;
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 20px;
-}
-
-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.logo {
-    height: 60px;
-    margin-bottom: 1rem;
 }
 
 h1 {
     font-family: var(--font-paris);
     color: var(--primary-color);
-}
-
-#reader {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #ddd;
-}
-
-.upload-section {
+    margin-bottom: 20px;
     text-align: center;
-    margin: 2rem 0;
 }
 
-.upload-section p {
-    margin: 1rem 0;
-    color: #666;
+#scanner-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #000;
+    position: relative;
 }
 
-.upload-section input[type="file"] {
-    display: none;
+#scanner-video {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
-.upload-section label {
+#restartScanner {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
     background-color: var(--primary-color);
     color: white;
-    padding: 10px 20px;
-    border-radius: 4px;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-weight: bold;
     cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#file-selector {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+label[for="file-selector"] {
     display: inline-block;
-    margin-top: 10px;
-    transition: all 0.3s ease;
+    padding: 12px 24px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 20px 0;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    text-align: center;
 }
 
-.upload-section label:hover {
+label[for="file-selector"]:hover {
     background-color: #1515a0;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.result-card {
-    background-color: white;
+#result {
+    width: 100%;
+    max-width: 500px;
+    margin: 20px auto;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-top: 2rem;
-    transition: all 0.3s ease;
 }
 
-.valid-badge, .error-badge {
-    text-align: center;
-    font-size: 1.2rem;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    font-weight: bold;
+.valid {
+    background-color: #e6f4ea;
+    border: 1px solid var(--success-color);
 }
 
-.valid-badge {
-    background-color: #d4edda;
+.valid h2 {
     color: var(--success-color);
+    margin-bottom: 15px;
 }
 
-.error-badge {
-    background-color: #f8d7da;
+.invalid {
+    background-color: #fce8e6;
+    border: 1px solid var(--error-color);
+}
+
+.invalid h2 {
     color: var(--error-color);
+    margin-bottom: 15px;
 }
 
-.ticket-details {
-    margin-top: 1rem;
-    border-top: 1px solid #eee;
-    padding-top: 1rem;
-}
-
-.ticket-details h3 {
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-    font-family: var(--font-paris);
-}
-
-.ticket-details p {
-    margin: 0.5rem 0;
-    line-height: 1.6;
-}
-
-.hidden {
-    display: none;
-}
-
-#result-section.success .result-card {
-    border-left: 5px solid var(--success-color);
-}
-
-#result-section.error .result-card {
-    border-left: 5px solid var(--error-color);
-}
-
-.error-message {
-    color: var(--error-color);
-    font-weight: bold;
-    text-align: center;
-    margin-top: 1rem;
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.5;
+    font-family: Arial, sans-serif;
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-    .container {
+@media (max-width: 600px) {
+    body {
         padding: 10px;
     }
-
-    #reader {
+    #scanner-container, #result {
         width: 100%;
-    }
-    
-    .ticket-details h3 {
-        font-size: 1.2rem;
-    }
-    
-    .ticket-details p {
-        font-size: 0.9rem;
     }
 }

@@ -5,7 +5,6 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from mainapp.models.event import Event
 from mainapp.models.ticket import Ticket
-from django.core.exceptions import ValidationError
 from django.utils import timezone
 import uuid
 
@@ -13,94 +12,91 @@ import uuid
 @permission_classes([IsAuthenticated])
 def list_user_tickets(request):
     """Récupère tous les billets de l'utilisateur connecté"""
-    tickets = Ticket.objects.filter(user=request.user).select_related('match')
-    tickets_data = []
-    
-    for ticket in tickets:
-        tickets_data.append({
-            'id': ticket.id,
-            'match': {
-                'team_home': ticket.match.team_home.name if ticket.match.team_home else "À déterminer",
-                'team_away': ticket.match.team_away.name if ticket.match.team_away else "À déterminer",
-                'stadium': ticket.match.stadium.name,
-                'start': ticket.match.start,
-            },
-            'category': ticket.category,
-            'price': str(ticket.price),
-            'purchase_date': ticket.purchase_date,
-            'qr_code_data': ticket.qr_code_data
-        })
-    
-    return Response(tickets_data)
+    try:
+        # Utiliser select_related pour charger les données liées en une seule requête
+        tickets = Ticket.objects.filter(user=request.user).select_related('event', 'event__stadium', 'event__team_home', 'event__team_away')
+        tickets_data = []
+        
+        for ticket in tickets:
+            # Accéder aux données de manière sécurisée
+            event = ticket.event
+            team_home_name = event.team_home.name if event.team_home else "À déterminer"
+            team_away_name = event.team_away.name if event.team_away else "À déterminer"
+            stadium_name = event.stadium.name if event.stadium else "À déterminer"
+            
+            # Construire l'objet de réponse
+            tickets_data.append({
+                'id': str(ticket.id),
+                'match': {
+                    'team_home': team_home_name,
+                    'team_away': team_away_name,
+                    'stadium': stadium_name,
+                    'start': event.start,
+                },
+                'category': ticket.category,
+                'price': str(ticket.price),
+                'purchase_date': ticket.purchase_date,
+                'qr_code_data': ticket.qr_code_data
+            })
+        
+        return Response(tickets_data)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response(
+            {"message": f"Erreur lors de la récupération des billets: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def buy_ticket(request):
     """Achète un nouveau billet"""
     try:
-        print("Données reçues:", request.data)
+        data = request.data
+        print("Données reçues:", data)
         
-        match_id = request.data.get('match_id')
-        category = request.data.get('category')
+        # Solution simple : utiliser directement match_id
+        match_id = data.get('match_id')
+        category = data.get('category')
         
-        # Fixer les prix selon la catégorie (comme dans le modèle CAKICI_semih)
-        category_prices = {
-            'Silver': 100.00,
-            'Gold': 200.00,
-            'Platinum': 300.00,
-        }
-        
-        # Calculer le prix en fonction de la catégorie
-        price = category_prices.get(category, 0)
-        
-        print(f"match_id: {match_id}, category: {category}, price calculé: {price}")
-
-        # Vérifier que tous les champs requis sont présents
         if not match_id or not category:
-            print("Champs requis manquants")
             return Response({
                 "message": "Le match et la catégorie sont requis"
             }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Vérifier que la catégorie est valide
-        if category not in category_prices:
-            print(f"Catégorie invalide: {category}")
-            return Response({
-                "message": f"Catégorie de billet invalide. Choisissez parmi: Silver, Gold, Platinum"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Récupérer le match
+        
+        # Récupérer l'événement correspondant
         try:
-            match = Event.objects.get(id=match_id)
-            print(f"Match trouvé: {match}")
+            event = Event.objects.get(id=match_id)
         except Event.DoesNotExist:
-            print(f"Match non trouvé: {match_id}")
             return Response({
                 "message": "Match non trouvé"
             }, status=status.HTTP_404_NOT_FOUND)
-
-        # Pour les besoins de test, nous désactivons la vérification du statut du match
-        # Vous pourrez réactiver ces vérifications plus tard en production
-
-        # Créer le billet
-        ticket = Ticket.objects.create(
-            id=str(uuid.uuid4()),
-            match=match,
+        
+        # Vérifier la catégorie
+        valid_categories = ['Silver', 'Gold', 'Platinum']
+        if category not in valid_categories:
+            return Response({
+                "message": f"Catégorie invalide: {category}. Choisissez parmi: {', '.join(valid_categories)}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Créer le ticket
+        ticket = Ticket(
+            event=event,
             user=request.user,
-            category=category,
-            price=price
+            category=category
         )
-        print(f"Ticket créé avec succès: {ticket.id}")
-
+        ticket.save()
+        
         return Response({
             "message": "Billet acheté avec succès",
             "ticket": {
-                "id": ticket.id,
+                "id": str(ticket.id),
                 "match": {
-                    "team_home": match.team_home.name if match.team_home else "À déterminer",
-                    "team_away": match.team_away.name if match.team_away else "À déterminer",
-                    "stadium": match.stadium.name,
-                    "start": match.start
+                    "team_home": event.team_home.name if event.team_home else "À déterminer",
+                    "team_away": event.team_away.name if event.team_away else "À déterminer",
+                    "stadium": event.stadium.name,
+                    "start": event.start
                 },
                 "category": ticket.category,
                 "price": str(ticket.price),
@@ -109,7 +105,6 @@ def buy_ticket(request):
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        print(f"Erreur lors de l'achat du billet: {e}")
         import traceback
         traceback.print_exc()
         return Response({
@@ -125,19 +120,26 @@ def verify_ticket(request, ticket_id):
         return Response({
             "valid": True,
             "ticket": {
-                "id": ticket.id,
+                "id": str(ticket.id),
                 "match": {
-                    "team_home": ticket.match.team_home.name if ticket.match.team_home else "À déterminer",
-                    "team_away": ticket.match.team_away.name if ticket.match.team_away else "À déterminer",
-                    "stadium": ticket.match.stadium.name,
-                    "start": ticket.match.start
+                    "name": f"{ticket.event.team_home.name if ticket.event.team_home else 'À déterminer'} vs {ticket.event.team_away.name if ticket.event.team_away else 'À déterminer'}",
+                    "start": ticket.event.start,
+                    "team_home": ticket.event.team_home.name if ticket.event.team_home else "À déterminer",
+                    "team_away": ticket.event.team_away.name if ticket.event.team_away else "À déterminer",
+                    "stadium": ticket.event.stadium.name
                 },
                 "category": ticket.category,
+                "price": str(ticket.price),
                 "user": ticket.user.username
             }
         })
     except Ticket.DoesNotExist:
         return Response({
             "valid": False,
-            "message": "Billet invalide ou non trouvé"
+            "message": "Billet non trouvé"
         }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            "valid": False,
+            "message": f"Erreur lors de la vérification du billet: {str(e)}"
+        }, status=status.HTTP_400_BAD_REQUEST)

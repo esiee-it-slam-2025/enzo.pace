@@ -179,12 +179,13 @@ async function checkout() {
         console.log("Contenu du panier:", cart);
         console.log("CSRF Token:", csrfToken);
 
-        // Envoi de chaque ticket individuellement
+        // Traiter chaque article du panier
         const purchasedTickets = [];
         for (const item of cart) {
             for (let i = 0; i < item.quantity; i++) {
                 console.log(`Achat du billet ${i+1}/${item.quantity} pour le match ${item.matchId}, catégorie ${item.category}`);
                 
+                // Utiliser match_id au lieu de event_id
                 const requestData = {
                     match_id: item.matchId,
                     category: item.category

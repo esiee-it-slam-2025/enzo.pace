@@ -5,33 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scanner de Billets JO 2024</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <img src="../mobile/assets/JO Icons.svg" alt="Logo JO" class="logo">
-            <h1>Vérification des Billets</h1>
-        </header>
+    <h1>Scanner de Billets JO 2024</h1>
 
-        <main>
-            <div id="reader"></div>
-            
-            <div class="upload-section">
-                <p>ou</p>
-                <input type="file" id="qr-input-file" accept="image/*">
-                <label for="qr-input-file">Charger une image</label>
-            </div>
-
-            <div id="result-section" class="hidden">
-                <div class="result-card">
-                    <h2>Résultat de la vérification</h2>
-                    <div id="result-content"></div>
-                </div>
-            </div>
-        </main>
+    <div id="scanner-container">
+        <button id="restartScanner" class="buttonCam">OFF</button>
+        <video id="scanner-video"></video>
     </div>
+
+    <label for="file-selector">Choisir une image de QR Code</label>
+    <input type="file" id="file-selector" accept="image/*">
+
+    <div id="result"></div>
 
     <script src="js/scanner.js"></script>
 </body>
