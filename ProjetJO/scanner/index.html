@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scanner de Billets JO 2024</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- Utiliser la dernière version du scanner QR -->
+    <script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js"></script>
     <script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
 </head>
 <body>
@@ -12,13 +14,19 @@
 
     <div id="scanner-container">
         <button id="restartScanner" class="buttonCam">OFF</button>
+        <div class="scanning-frame"></div>
         <video id="scanner-video"></video>
     </div>
 
-    <label for="file-selector">Choisir une image de QR Code</label>
-    <input type="file" id="file-selector" accept="image/*">
+    <div class="upload-section">
+        <label for="file-selector" class="file-label">Choisir une image de QR Code</label>
+        <input type="file" id="file-selector" accept="image/*">
+    </div>
 
-    <div id="result"></div>
+    <div id="result">
+        <h2>Scanner actif</h2>
+        <div class="result-content">Placez un QR code dans le cadre pour le scanner.</div>
+    </div>
 
     <script src="js/scanner.js"></script>
 </body>

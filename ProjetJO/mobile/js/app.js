@@ -286,6 +286,76 @@ async function loadUserTickets() {
     }
 }
 
+function displayTickets(tickets) {
+    const container = document.getElementById('tickets-container');
+    
+    if (!container) {
+        console.error("Conteneur de billets non trouvé");
+        return;
+    }
+    
+    if (!tickets || tickets.length === 0) {
+        container.innerHTML = '<p class="no-tickets">Vous n\'avez pas encore de billets.</p>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    tickets.forEach(ticket => {
+        const ticketElement = document.createElement('div');
+        ticketElement.className = 'ticket-card';
+        
+        const formattedDate = new Date(ticket.match.start).toLocaleString('fr-FR', {
+            dateStyle: 'long',
+            timeStyle: 'short'
+        });
+        
+        // Assurez-vous que l'ID est bien nettoyé
+        const cleanId = ticket.id.replace(/[^a-zA-Z0-9]/g, '');
+        
+        ticketElement.innerHTML = `
+            <h3>${ticket.match.team_home} vs ${ticket.match.team_away}</h3>
+            <div class="ticket-details">
+                <p>Stade: ${ticket.match.stadium}</p>
+                <p>Date: ${formattedDate}</p>
+                <p>Prix: ${ticket.price}€</p>
+                <p>Catégorie: <span class="ticket-category">${ticket.category}</span></p>
+            </div>
+            <div class="qr-code">
+                <canvas id="qr-${cleanId}"></canvas>
+            </div>
+            <button class="view-ticket-btn" onclick="handleTicket('${ticket.id}', this.parentElement)">
+                Voir le billet
+            </button>
+        `;
+        
+        container.appendChild(ticketElement);
+        
+        // Attendre que le DOM soit mis à jour
+        setTimeout(() => {
+            try {
+                const qrElement = document.getElementById(`qr-${cleanId}`);
+                if (qrElement) {
+                    // Utiliser directement l'ID du ticket comme donnée du QR code
+                    new QRious({
+                        element: qrElement,
+                        value: ticket.id, // Utiliser directement l'ID
+                        size: 150,
+                        level: 'H', // Haute correction d'erreur
+                        background: 'white',
+                        foreground: 'black',
+                        padding: 10
+                    });
+                } else {
+                    console.error(`Élément QR non trouvé pour le ticket ${ticket.id}`);
+                }
+            } catch (error) {
+                console.error(`Erreur lors de la génération du QR code pour le ticket ${ticket.id}:`, error);
+            }
+        }, 100);
+    });
+}
+
 function closeModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
 }

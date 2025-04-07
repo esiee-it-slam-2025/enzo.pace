@@ -44,12 +44,52 @@ h1 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: #000;
     position: relative;
+    aspect-ratio: 4/3; /* Maintenir un ratio d'aspect fixe */
 }
 
 #scanner-video {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
+    object-fit: cover;
+}
+
+.scanning-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.3);
+    z-index: 5;
+    pointer-events: none;
+}
+
+.scanning-frame::before,
+.scanning-frame::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: var(--secondary-color);
+    border-style: solid;
+}
+
+.scanning-frame::before {
+    top: -2px;
+    left: -2px;
+    border-width: 4px 0 0 4px;
+    border-radius: 8px 0 0 0;
+}
+
+.scanning-frame::after {
+    bottom: -2px;
+    right: -2px;
+    border-width: 0 4px 4px 0;
+    border-radius: 0 0 8px 0;
 }
 
 #restartScanner {
@@ -66,6 +106,19 @@ h1 {
     font-weight: bold;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+#restartScanner:hover {
+    background-color: var(--secondary-color);
+    transform: scale(1.05);
+}
+
+.upload-section {
+    width: 100%;
+    max-width: 500px;
+    margin: 20px auto;
+    text-align: center;
 }
 
 #file-selector {
@@ -77,21 +130,24 @@ h1 {
     z-index: -1;
 }
 
-label[for="file-selector"] {
+.file-label {
     display: inline-block;
     padding: 12px 24px;
     background-color: var(--primary-color);
     color: white;
     border-radius: 6px;
     cursor: pointer;
-    margin: 20px 0;
     font-weight: 500;
     transition: background-color 0.3s ease;
+    width: 100%;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-label[for="file-selector"]:hover {
+.file-label:hover {
     background-color: #1515a0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 #result {
@@ -101,6 +157,7 @@ label[for="file-selector"]:hover {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 .valid {
@@ -111,6 +168,7 @@ label[for="file-selector"]:hover {
 .valid h2 {
     color: var(--success-color);
     margin-bottom: 15px;
+    text-align: center;
 }
 
 .invalid {
@@ -121,13 +179,27 @@ label[for="file-selector"]:hover {
 .invalid h2 {
     color: var(--error-color);
     margin-bottom: 15px;
+    text-align: center;
 }
 
-pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
+.result-content {
     line-height: 1.5;
     font-family: Arial, sans-serif;
+}
+
+.ticket-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ticket-info p {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 8px;
+}
+
+.ticket-info p:last-child {
+    border-bottom: none;
 }
 
 /* Responsive */
@@ -135,7 +207,15 @@ pre {
     body {
         padding: 10px;
     }
-    #scanner-container, #result {
+    
+    #scanner-container, 
+    #result, 
+    .upload-section {
         width: 100%;
+    }
+    
+    .scanning-frame {
+        width: 85%;
+        height: 85%;
     }
 }
