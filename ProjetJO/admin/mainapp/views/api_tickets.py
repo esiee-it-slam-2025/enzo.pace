@@ -110,20 +110,15 @@ def buy_ticket(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-# Enlevez le décorateur permission_classes si présent
 def verify_ticket(request, ticket_id):
     """Vérifie la validité d'un billet via son QR code"""
     try:
         # Nettoyer l'ID du ticket
         clean_ticket_id = ticket_id.strip()
         
-        # Gestion plus robuste des formats possibles
-        if 'ID:' in clean_ticket_id and '|' in clean_ticket_id:
-            clean_ticket_id = clean_ticket_id.split('|')[0].split('ID:')[1].strip()
-        
         print(f"Vérification du ticket ID: {clean_ticket_id}")
         
-        # Récupérer le ticket avec les relations
+        # Récupérer le ticket
         ticket = Ticket.objects.select_related(
             'event', 'event__stadium', 'event__team_home', 'event__team_away', 'user'
         ).get(id=clean_ticket_id)
@@ -132,9 +127,13 @@ def verify_ticket(request, ticket_id):
         team_home_name = ticket.event.team_home.name if ticket.event.team_home else "À déterminer"
         team_away_name = ticket.event.team_away.name if ticket.event.team_away else "À déterminer"
         
-        # Marquer le ticket comme utilisé (optionnel)
-        # ticket.used = True
-        # ticket.save()
+        # Vérifier si le ticket est déjà utilisé
+        already_used = ticket.used
+        
+        # Marquer le ticket comme utilisé s'il ne l'est pas déjà
+        if not ticket.used:
+            ticket.used = True
+            ticket.save()
         
         return Response({
             "valid": True,
@@ -151,10 +150,11 @@ def verify_ticket(request, ticket_id):
                 "category": ticket.category,
                 "price": str(ticket.price),
                 "user": ticket.user.username,
-                "used": ticket.used
+                "already_used": already_used  # Indique si le ticket était déjà utilisé avant
             }
         })
     except Ticket.DoesNotExist:
+        print(f"Ticket non trouvé: {ticket_id}")
         return Response({
             "valid": False,
             "message": "Billet non trouvé"

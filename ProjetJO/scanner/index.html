@@ -5,29 +5,194 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scanner de Billets JO 2024</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Utiliser la dernière version du scanner QR -->
-    <script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js"></script>
-    <script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
+    <!-- Bibliothèque jsQR plus fiable -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        .usage-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #856404;
+        }
+        
+        .usage-success {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #155724;
+        }
+    </style>
 </head>
 <body>
     <h1>Scanner de Billets JO 2024</h1>
 
-    <div id="scanner-container">
+    <!-- Scanner par caméra désactivé pour l'instant -->
+    <div id="scanner-container" style="display: none;">
         <button id="restartScanner" class="buttonCam">OFF</button>
         <div class="scanning-frame"></div>
         <video id="scanner-video"></video>
     </div>
 
     <div class="upload-section">
-        <label for="file-selector" class="file-label">Choisir une image de QR Code</label>
+        <h2>Importer une image QR Code</h2>
+        <label for="file-selector" class="file-label">Choisir une image</label>
         <input type="file" id="file-selector" accept="image/*">
     </div>
 
     <div id="result">
-        <h2>Scanner actif</h2>
-        <div class="result-content">Placez un QR code dans le cadre pour le scanner.</div>
+        <h2>Résultat</h2>
+        <div class="result-content">Importez une image contenant un QR code pour le scanner.</div>
     </div>
 
-    <script src="js/scanner.js"></script>
+    <script>
+        // Code JavaScript directement intégré pour éviter les problèmes de fichiers
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileSelector = document.getElementById("file-selector");
+            const resultDiv = document.getElementById("result");
+
+            fileSelector.addEventListener("change", (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                console.log("Fichier sélectionné:", file.name, file.type);
+                displayResult("Traitement en cours", "Analyse de l'image...", true);
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Créer un canvas pour traiter l'image
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        context.drawImage(img, 0, 0, img.width, img.height);
+                        
+                        // Obtenir les données de l'image
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        console.log("Image traitée, dimensions:", imageData.width, "x", imageData.height);
+                        
+                        try {
+                            // Scanner le QR code avec jsQR
+                            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                                inversionAttempts: "dontInvert",
+                            });
+                            
+                            if (code) {
+                                console.log("QR code trouvé:", code.data);
+                                handleScanResult(code.data);
+                            } else {
+                                console.error("Aucun QR code trouvé dans l'image");
+                                displayResult("Erreur", "Aucun QR code n'a été détecté dans cette image. Essayez avec une autre image.", false);
+                            }
+                        } catch (error) {
+                            console.error("Erreur lors du scan:", error);
+                            displayResult("Erreur", "Problème lors de l'analyse de l'image: " + error.message, false);
+                        }
+                    };
+                    img.onerror = function() {
+                        console.error("Erreur lors du chargement de l'image");
+                        displayResult("Erreur", "Format d'image non supporté ou image corrompue.", false);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    console.error("Erreur lors de la lecture du fichier");
+                    displayResult("Erreur", "Impossible de lire le fichier.", false);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            async function handleScanResult(scanData) {
+                try {
+                    console.log("Contenu du QR scanné:", scanData);
+                    
+                    if (!scanData || typeof scanData !== 'string' || scanData.trim() === '') {
+                        displayResult("Erreur", "QR code non valide - Aucune donnée détectée", false);
+                        return;
+                    }
+                    
+                    let ticketId = scanData.trim();
+                    console.log("ID du ticket à vérifier:", ticketId);
+                    
+                    displayResult("Vérification", "Connexion au serveur...", true);
+                    
+                    try {
+                        const response = await fetch(`http://127.0.0.1:8000/api/tickets/verify/${ticketId}`);
+                        
+                        console.log("Statut de la réponse API:", response.status);
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error("Erreur API:", errorText);
+                            throw new Error(`Erreur ${response.status}: ${errorText}`);
+                        }
+                        
+                        const responseText = await response.text();
+                        console.log("Réponse brute de l'API:", responseText);
+                        
+                        let ticketDetails;
+                        try {
+                            ticketDetails = JSON.parse(responseText);
+                            console.log("Données du ticket:", ticketDetails);
+                        } catch (e) {
+                            console.error("Erreur parse JSON:", e);
+                            throw new Error("Format de réponse invalide");
+                        }
+                        
+                        if (ticketDetails && ticketDetails.valid) {
+                            const eventDate = new Date(ticketDetails.ticket.match.start);
+                            const formattedDate = eventDate.toLocaleDateString('fr-FR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            
+                            // Ajouter un message selon que le ticket ait déjà été utilisé
+                            const usageStatus = ticketDetails.ticket.already_used 
+                                ? '<p class="usage-warning"><strong>⚠️ ATTENTION:</strong> Ce billet a déjà été utilisé précédemment!</p>'
+                                : '<p class="usage-success"><strong>✅ PREMIÈRE UTILISATION:</strong> Ce billet n\'a jamais été utilisé auparavant.</p>';
+                            
+                            displayResult(
+                                ticketDetails.ticket.already_used ? "⚠️ Billet Déjà Utilisé" : "✅ Billet Valide",
+                                `
+                                <div class="ticket-info">
+                                    ${usageStatus}
+                                    <p><strong>Événement:</strong> ${ticketDetails.ticket.match.name}</p>
+                                    <p><strong>Date:</strong> ${formattedDate}</p>
+                                    <p><strong>Stade:</strong> ${ticketDetails.ticket.match.stadium}</p>
+                                    <p><strong>Catégorie:</strong> ${ticketDetails.ticket.category}</p>
+                                    <p><strong>Prix:</strong> ${ticketDetails.ticket.price}€</p>
+                                    <p><strong>Propriétaire:</strong> ${ticketDetails.ticket.user}</p>
+                                </div>
+                                `,
+                                true
+                            );
+                        } else {
+                            displayResult("❌ Billet Non Valide", "Ce billet n'est pas valide : " + (ticketDetails.message || "Raison inconnue"), false);
+                        }
+                    } catch (error) {
+                        console.error("Erreur lors de l'appel API:", error);
+                        displayResult("Erreur de communication", "Impossible de vérifier le billet auprès du serveur. Vérifiez que le serveur est en marche et accessible.", false);
+                    }
+                } catch (error) {
+                    console.error("Erreur générale:", error);
+                    displayResult("Erreur système", error.message, false);
+                }
+            }
+
+            function displayResult(title, message, isValid) {
+                resultDiv.className = isValid ? "valid" : "invalid";
+                resultDiv.innerHTML = `
+                    <h2>${title}</h2>
+                    <div class="result-content">${message}</div>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>

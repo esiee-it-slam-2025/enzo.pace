@@ -219,3 +219,18 @@ h1 {
         height: 85%;
     }
 }
+    .usage-warning {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 10px;
+        margin-bottom: 15px;
+        color: #856404;
+    }
+    
+    .usage-success {
+        background-color: #d4edda;
+        border-left: 4px solid #28a745;
+        padding: 10px;
+        margin-bottom: 15px;
+        color: #155724;
+    }
