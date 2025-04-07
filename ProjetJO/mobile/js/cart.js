@@ -1,17 +1,21 @@
 let cart = [];
 
 function addToCart(matchId, category, quantity, matchInfo) {
+    // Vérification de la connexion
     if (!currentUser) {
         showNotification("Veuillez vous connecter pour ajouter des billets au panier", "error");
         return;
     }
 
+    // Validation des données
     if (!matchId || !category || !quantity) {
         showNotification("Informations du billet incomplètes", "error");
         return;
     }
 
-    if (matchInfo.is_finished) {
+    // Vérifier si le match n'est pas terminé
+    const matchDate = new Date(matchInfo.start);
+    if (matchDate < new Date() || matchInfo.is_finished) {
         showNotification("Ce match est terminé, vous ne pouvez plus acheter de billets", "error");
         return;
     }
@@ -22,6 +26,7 @@ function addToCart(matchId, category, quantity, matchInfo) {
         'Platinum': 300
     };
 
+    // Validation de la catégorie
     if (!prices[category]) {
         showNotification("Catégorie de billet invalide", "error");
         return;
@@ -32,7 +37,8 @@ function addToCart(matchId, category, quantity, matchInfo) {
         category,
         quantity: parseInt(quantity),
         price: prices[category],
-        matchInfo
+        matchInfo,
+        addedAt: new Date().toISOString() // Pour tracer quand l'item a été ajouté
     };
 
     cart.push(cartItem);
@@ -83,6 +89,9 @@ function displayCart() {
         const itemTotal = item.price * item.quantity;
         total += itemTotal;
 
+        const matchDate = new Date(item.matchInfo.start);
+        const isMatchValid = matchDate > new Date() && !item.matchInfo.is_finished;
+
         const cartItemDiv = document.createElement('div');
         cartItemDiv.className = 'cart-item';
         cartItemDiv.innerHTML = `
@@ -93,6 +102,7 @@ function displayCart() {
                 <p>Catégorie : ${item.category}</p>
                 <p>Quantité : ${item.quantity}</p>
                 <p>Prix unitaire : ${item.price}€</p>
+                ${!isMatchValid ? '<p class="error-text">Ce match n\'est plus disponible</p>' : ''}
             </div>
             <div class="cart-item-actions">
                 <p class="item-total">${itemTotal}€</p>
@@ -100,6 +110,14 @@ function displayCart() {
             </div>
         `;
         cartItems.appendChild(cartItemDiv);
+
+        // Si le match n'est plus valide, on le supprime automatiquement après un délai
+        if (!isMatchValid) {
+            setTimeout(() => {
+                removeFromCart(index);
+                showNotification("Un match expiré a été retiré de votre panier", "info");
+            }, 3000);
+        }
     });
 
     cartTotal.textContent = `${total}€`;
@@ -121,9 +139,13 @@ function loadCart() {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
         cart = JSON.parse(savedCart);
-        cart = cart.filter(item => !item.matchInfo.is_finished);
+        // Nettoyer le panier des matchs expirés au chargement
+        cart = cart.filter(item => {
+            const matchDate = new Date(item.matchInfo.start);
+            return matchDate > new Date() && !item.matchInfo.is_finished;
+        });
         updateCartCount();
-        saveCart();
+        saveCart(); // Sauvegarder le panier nettoyé
     }
 }
 
@@ -144,11 +166,33 @@ async function checkout() {
         return;
     }
 
+    // Vérifier si tous les matchs sont toujours valides
+    const invalidMatches = cart.filter(item => {
+        const matchDate = new Date(item.matchInfo.start);
+        return matchDate <= new Date() || item.matchInfo.is_finished;
+    });
+
+    if (invalidMatches.length > 0) {
+        showNotification("Certains matchs ne sont plus disponibles. Veuillez vérifier votre panier.", "error");
+        displayCart(); // Rafraîchir l'affichage du panier
+        return;
+    }
+
     try {
-        // Parcourir chaque ticket dans le panier
-        for (const item of cart) {
-            for (let i = 0; i < item.quantity; i++) {
-                const response = await fetch('http://127.0.0.1:8000/api/tickets/buy/', {
+        const API_URL = 'http://127.0.0.1:8000';
+
+        const tickets = cart.map(item => ({
+            match_id: item.matchId,
+            category: item.category,
+            price: item.price,
+            quantity: item.quantity
+        }));
+
+        // Envoi de chaque ticket individuellement
+        const purchasedTickets = [];
+        for (const ticket of tickets) {
+            for (let i = 0; i < ticket.quantity; i++) {
+                const response = await fetch(`${API_URL}/api/tickets/buy/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -156,32 +200,34 @@ async function checkout() {
                     },
                     credentials: 'include',
                     body: JSON.stringify({
-                        match_id: item.matchId,
-                        category: item.category,
-                        price: item.price
+                        match_id: ticket.match_id,
+                        category: ticket.category,
+                        price: ticket.price
                     })
                 });
 
+                const responseData = await response.json();
+
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || "Erreur lors de l'achat");
+                    throw new Error(responseData.message || "Erreur lors de la validation de la commande");
                 }
+
+                purchasedTickets.push(responseData.ticket);
             }
         }
 
-        showNotification("Achat effectué avec succès !", "success");
+        showNotification("Commande validée avec succès !", "success");
         clearCart();
         closeModal('cart-modal');
-        
-        // Recharger les billets après l'achat
-        await loadUserTickets();
+        loadUserTickets();
 
     } catch (error) {
-        console.error('Erreur lors de l\'achat:', error);
-        showNotification(error.message || "Erreur lors de l'achat", "error");
+        console.error('Erreur détaillée:', error);
+        showNotification(`Erreur lors de la validation de la commande : ${error.message}`, "error");
     }
 }
 
+// Event Listeners
 document.getElementById('cart-btn')?.addEventListener('click', () => {
     document.getElementById('cart-modal').style.display = 'block';
     displayCart();

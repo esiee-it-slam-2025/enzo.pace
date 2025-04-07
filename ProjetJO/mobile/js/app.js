@@ -79,12 +79,6 @@ async function loadMatches() {
 }
 
 function displayMatches(matches) {
-    if (!matches || matches.length === 0) {
-        const container = document.getElementById("matches");
-        container.innerHTML = '<p class="error-message">Aucun match disponible.</p>';
-        return;
-    }
-
     const container = document.getElementById("matches");
     container.innerHTML = '';
 
@@ -92,6 +86,7 @@ function displayMatches(matches) {
     const upcomingMatches = matches.filter(match => !match.is_finished);
     const finishedMatches = matches.filter(match => match.is_finished);
 
+    // Créer la structure HTML
     container.innerHTML = `
         <div class="matches-container">
             <section class="matches-section upcoming-matches">
@@ -99,17 +94,15 @@ function displayMatches(matches) {
                 <div class="matches-grid" id="upcoming-matches"></div>
             </section>
             
-            ${finishedMatches.length > 0 ? `
-                <div class="matches-divider">
-                    <div class="divider-line"></div>
-                    <span class="divider-text">Matchs terminés</span>
-                    <div class="divider-line"></div>
-                </div>
-                
-                <section class="matches-section finished-matches">
-                    <div class="matches-grid" id="finished-matches"></div>
-                </section>
-            ` : ''}
+            <div class="matches-divider">
+                <div class="divider-line"></div>
+                <span class="divider-text">Matchs terminés</span>
+                <div class="divider-line"></div>
+            </div>
+            
+            <section class="matches-section finished-matches">
+                <div class="matches-grid" id="finished-matches"></div>
+            </section>
         </div>
     `;
 
@@ -132,34 +125,37 @@ function displayMatches(matches) {
             <div class="match-info">
                 <p class="stadium">${match.stadium_name}</p>
                 <p class="date">${date}</p>
-                ${match.is_finished ? `
+                ${match.score ? `
                     <div class="match-result">
-                        <p class="score">Score : ${match.score || '0 - 0'}</p>
+                        <p class="score">Score : ${match.score}</p>
                         <p class="status">${match.match_status}</p>
                     </div>
                 ` : ''}
             </div>
-            ${!match.is_finished ? `
-                <button class="buy-ticket-btn" onclick="openPurchaseModal(${JSON.stringify(match).replace(/"/g, "'")})">
-                    Acheter des billets
-                </button>
-            ` : ''}
         `;
+
+        if (!match.is_finished) {
+            const buyButton = document.createElement('button');
+            buyButton.className = 'buy-ticket-btn';
+            buyButton.textContent = 'Acheter des billets';
+            buyButton.addEventListener('click', () => openPurchaseModal(match));
+            matchDiv.appendChild(buyButton);
+        }
 
         return matchDiv;
     }
 
+    // Afficher les matchs à venir
     const upcomingContainer = document.getElementById('upcoming-matches');
     upcomingMatches.forEach(match => {
         upcomingContainer.appendChild(createMatchCard(match));
     });
 
+    // Afficher les matchs terminés
     const finishedContainer = document.getElementById('finished-matches');
-    if (finishedContainer) {
-        finishedMatches.forEach(match => {
-            finishedContainer.appendChild(createMatchCard(match));
-        });
-    }
+    finishedMatches.forEach(match => {
+        finishedContainer.appendChild(createMatchCard(match));
+    });
 }
 
 function openPurchaseModal(match) {
@@ -211,83 +207,39 @@ function openPurchaseModal(match) {
 }
 
 async function loadUserTickets() {
-    if (!currentUser) {
-        console.log("Aucun utilisateur connecté");
-        return;
-    }
+    if (!currentUser) return;
 
     try {
         const response = await fetch("http://127.0.0.1:8000/api/tickets/", {
-            method: 'GET',
-            credentials: 'include',
+            credentials: "include",
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             }
         });
 
-        // Ajout d'un log pour voir le statut de la réponse
-        console.log("Statut de la réponse des tickets:", response.status);
-
-        if (!response.ok) {
-            // Log du contenu de l'erreur
-            const errorText = await response.text();
-            console.error("Erreur détaillée:", errorText);
-            
-            throw new Error(errorText || 'Erreur lors du chargement des billets');
-        }
+        if (!response.ok) throw new Error('Erreur lors du chargement des billets');
 
         const tickets = await response.json();
-        
-        // Log détaillé des billets
-        console.log("Billets reçus:", tickets);
-
-        if (tickets.length === 0) {
-            console.log("Aucun billet trouvé pour cet utilisateur");
-        }
-
         displayTickets(tickets);
     } catch (error) {
-        console.error("Erreur lors du chargement des billets:", error);
-        
-        // Message d'erreur plus détaillé
-        showNotification(`Impossible de charger vos billets : ${error.message}`, "error");
-        
-        const container = document.getElementById('tickets-container');
-        if (container) {
-            container.innerHTML = `
-                <div class="error-message">
-                    Une erreur est survenue lors du chargement des billets. 
-                    Détails : ${error.message}
-                </div>
-            `;
-        }
+        console.error("Erreur:", error);
+        alert("Impossible de charger vos billets");
     }
 }
 
 function displayTickets(tickets) {
-    console.log("Début de displayTickets", tickets);
     const container = document.getElementById('tickets-container');
-    
-    if (!container) {
-        console.error("Conteneur de tickets non trouvé");
-        return;
-    }
-
     container.innerHTML = '';
 
-    if (!tickets || tickets.length === 0) {
-        console.log("Aucun billet trouvé");
+    if (tickets.length === 0) {
         container.innerHTML = '<p class="no-tickets">Vous n\'avez pas encore de billets</p>';
         return;
     }
 
     tickets.forEach(ticket => {
-        console.log("Traitement du ticket:", ticket);
-
         const ticketElement = document.createElement('div');
         ticketElement.className = 'ticket-card';
-        ticketElement.dataset.ticketId = ticket.id;  // Important : ajouter l'ID du ticket
+        ticketElement.dataset.ticketId = ticket.id;
         
         const date = new Date(ticket.match.start).toLocaleString('fr-FR', {
             dateStyle: 'long',
@@ -305,26 +257,11 @@ function displayTickets(tickets) {
                 <p><strong>Prix:</strong> ${ticket.price}€</p>
             </div>
             <div class="qr-code" id="qr-${ticket.id}"></div>
-            <button onclick="handleTicket('${ticket.id}', this.closest('.ticket-card'))" class="view-ticket-btn">
-                Voir le billet
-            </button>
+            <button onclick="handleTicket('${ticket.id}', this.closest('.ticket-card'))" class="view-ticket-btn">Voir le billet</button>
         `;
 
         container.appendChild(ticketElement);
-        
-        // Génération du QR Code
-        if (ticket.qr_code_data && typeof QRious !== 'undefined') {
-            try {
-                new QRious({
-                    element: document.getElementById(`qr-${ticket.id}`),
-                    value: ticket.qr_code_data,
-                    size: 200,
-                    level: 'H'
-                });
-            } catch (error) {
-                console.error('Erreur lors de la génération du QR code:', error);
-            }
-        }
+        QRHandler.generateQRCode(ticket.qr_code_data, `qr-${ticket.id}`);
     });
 }
 
@@ -344,97 +281,3 @@ function switchForm(form) {
         registerForm.style.display = 'block';
     }
 }
-
-function handleTicket(ticketId, ticketContainer) {
-    console.log("Début de handleTicket");
-    console.log("ID du ticket:", ticketId);
-    console.log("Conteneur du ticket:", ticketContainer);
-
-    try {
-        // Extraction des données du ticket
-        const ticket = {
-            id: ticketId,
-            match: {
-                team_home: ticketContainer.querySelector('.ticket-header h3')?.textContent.split('vs')[0]?.trim(),
-                team_away: ticketContainer.querySelector('.ticket-header h3')?.textContent.split('vs')[1]?.trim(),
-                stadium: ticketContainer.querySelector('.ticket-details p:nth-child(1)')?.textContent.replace('Stade:', '').trim(),
-                start: ticketContainer.querySelector('.ticket-details p:nth-child(2)')?.textContent.replace('Date:', '').trim()
-            },
-            category: ticketContainer.querySelector('.ticket-category')?.textContent.trim(),
-            price: parseFloat(ticketContainer.querySelector('.ticket-details p:nth-child(3)')?.textContent.replace('Prix:', '').replace('€', '').trim())
-        };
-
-        console.log("Ticket extrait:", ticket);
-
-        // Création de la modale
-        const modalContainer = document.createElement('div');
-        modalContainer.className = 'ticket-view-modal';
-        modalContainer.innerHTML = `
-            <div class="ticket-view-content">
-                <span class="close-ticket-view">&times;</span>
-                <div class="ticket-view-header">
-                    <h2>Détails du Billet</h2>
-                </div>
-                <div class="ticket-view-body">
-                    <div class="ticket-match-info">
-                        <div class="match-teams">
-                            <span class="team">${ticket.match.team_home || 'Non défini'}</span>
-                            <span class="vs">VS</span>
-                            <span class="team">${ticket.match.team_away || 'Non défini'}</span>
-                        </div>
-                        <div class="match-details">
-                            <p><strong>Stade :</strong> ${ticket.match.stadium || 'Non défini'}</p>
-                            <p><strong>Date :</strong> ${ticket.match.start || 'Non définie'}</p>
-                            <p><strong>Catégorie :</strong> ${ticket.category || 'Non définie'}</p>
-                            <p><strong>Prix :</strong> ${ticket.price || 'Non défini'}€</p>
-                        </div>
-                    </div>
-                    <div class="ticket-qr-code">
-                        <div id="ticket-qr-container"></div>
-                    </div>
-                </div>
-                <div class="ticket-view-actions">
-                    <button id="download-ticket-btn">
-                        <span class="download-icon">⬇️</span> Télécharger le billet
-                    </button>
-                </div>
-            </div>
-        `;
-
-        // Ajouter des styles inline pour s'assurer que la modale est visible
-        modalContainer.style.display = 'flex';
-        modalContainer.style.opacity = '1';
-
-        document.body.appendChild(modalContainer);
-
-        // Génération du QR Code
-        if (typeof QRious !== 'undefined') {
-            new QRious({
-                element: document.getElementById('ticket-qr-container'),
-                value: ticket.id,
-                size: 200,
-                level: 'H'
-            });
-        } else {
-            console.error('Bibliothèque QRious non chargée');
-        }
-
-        // Gestion de la fermeture de la modale
-        const closeButton = modalContainer.querySelector('.close-ticket-view');
-        closeButton.addEventListener('click', () => {
-            document.body.removeChild(modalContainer);
-        });
-
-        // Gestion du téléchargement du billet
-        const downloadButton = modalContainer.querySelector('#download-ticket-btn');
-        downloadButton.addEventListener('click', () => {
-            // Logique de téléchargement du billet
-            console.log('Téléchargement du billet', ticket);
-        });
-
-    } catch (error) {
-        console.error('Erreur détaillée:', error);
-        alert(`Erreur de chargement du billet : ${error.message}`);
-    }
-}
-

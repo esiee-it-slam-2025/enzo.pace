@@ -6,18 +6,40 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestionnaire d'événement pour l'upload de fichier
     fileInput.addEventListener('change', handleFile);
 
-    // Configuration du lecteur de QR code
+    // Configuration du scanner HTML5
     const html5QrcodeScanner = new Html5Qrcode("reader");
     
-    // Configurer la caméra (à décommenter quand on voudra l'utiliser)
-    /*
+    // Configuration pour la caméra
     const config = {
         fps: 10,
         qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0
     };
-    */
 
+    // Démarrer le scanner de caméra
+    html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess
+    ).catch(err => {
+        console.error("Erreur lors du démarrage de la caméra:", err);
+    });
+
+    // Fonction appelée lorsqu'un QR code est détecté via la caméra
+    function onScanSuccess(decodedText) {
+        if (isValidUUID(decodedText)) {
+            html5QrcodeScanner.pause();
+            verifyTicket(decodedText).then(() => {
+                setTimeout(() => {
+                    html5QrcodeScanner.resume();
+                }, 3000);
+            });
+        } else {
+            showError("QR code non valide - Format incorrect");
+        }
+    }
+
+    // Fonction pour traiter les fichiers uploadés
     async function handleFile(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -36,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Obtenir les données de l'image
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             
-            // Détecter le QR code
+            // Détecter le QR code avec jsQR
             const code = jsQR(imageData.data, imageData.width, imageData.height);
 
             if (code) {
@@ -56,13 +78,18 @@ document.addEventListener('DOMContentLoaded', function() {
             showError("Erreur lors de la lecture du fichier");
             console.error("Erreur détaillée:", error);
         }
+        
+        // Réinitialiser l'input file pour permettre de sélectionner à nouveau le même fichier
+        fileInput.value = '';
     }
 
+    // Vérifier si une chaîne est un UUID valide
     function isValidUUID(uuid) {
-        const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         return regex.test(uuid);
     }
 
+    // Créer une image à partir d'un fichier
     function createImageFromFile(file) {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -72,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Vérifier la validité d'un billet avec l'API
     async function verifyTicket(ticketId) {
         try {
             const response = await fetch(`http://127.0.0.1:8000/api/tickets/verify/${ticketId}`, {
@@ -97,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Afficher un message de succès
     function showSuccess(ticket) {
         let date;
         try {
@@ -108,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
             date = "Date non disponible";
         }
 
-        resultSection.className = 'success';
+        resultSection.className = '';
         resultContent.innerHTML = `
             <div class="valid-badge">✓ Billet Valide</div>
             <div class="ticket-details">
@@ -123,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resultSection.classList.remove('hidden');
     }
 
+    // Afficher un message d'erreur
     function showError(message) {
         resultSection.className = 'error';
         resultContent.innerHTML = `
@@ -132,6 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resultSection.classList.remove('hidden');
     }
 
+    // Jouer un son de validation
     function playValidationSound(type) {
         try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -156,30 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
             oscillator.stop(audioContext.currentTime + 0.2);
         } catch (e) {
             console.log("Audio non disponible:", e);
-        }
-    }
-
-    // Réinitialisation du champ de fichier après chaque scan
-    function resetFileInput() {
-        fileInput.value = '';
-    }
-
-    // Pour la future implémentation de la caméra
-    function initCamera() {
-        html5QrcodeScanner.start(
-            { facingMode: "environment" },
-            config,
-            onScanSuccess
-        ).catch(err => {
-            console.error("Erreur lors du démarrage de la caméra:", err);
-        });
-    }
-
-    function onScanSuccess(decodedText) {
-        if (isValidUUID(decodedText)) {
-            verifyTicket(decodedText);
-        } else {
-            showError("QR code non valide");
         }
     }
 });

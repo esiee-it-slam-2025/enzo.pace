@@ -1,201 +1,157 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <!-- Correction des chemins des scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <script src="/mobile/js/qr-handler.js" defer></script>
-    <script src="/mobile/js/auth.js" defer></script>
-    <script src="/mobile/js/cart.js" defer></script>
-    <script src="/mobile/js/app.js" defer></script>
-    <title>JO 2024 - Billetterie Football</title>
-  </head>
-  <body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="css/style.css">
+        <script src="js/auth.js"  defer></script>
+        <script src="js/cart.js"  defer></script>
+        <script src="js/qr-handler.js"  defer></script>
+        <script src="js/app.js"  defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+        <title>JO 2024 - Billetterie Football</title>
+    </head>
+<body>
     <header>
-      <div class="header-title">
-        <img src="assets/JO Icons.svg" alt="Logo JO" class="jo-logo" />
-        <h1>JO 2024 - Football</h1>
-      </div>
-      <div class="header-actions">
-        <div id="auth-buttons">
-          <button id="login-btn" class="auth-btn">Se connecter</button>
-          <button id="register-btn" class="auth-btn">S'inscrire</button>
+        <div class="header-title">
+            <img src="assets/JO Icons.svg" alt="Logo JO" class="jo-logo">
+            <h1>JO 2024 - Football</h1>
         </div>
-        <div id="user-info" style="display: none">
-          <span id="username"></span>
-          <button id="tickets-btn" class="nav-btn">Mes Billets</button>
-          <button id="cart-btn" class="nav-btn">
-            Panier <span id="cart-count">0</span>
-          </button>
-          <button id="logout-btn">Déconnexion</button>
+        <div class="header-actions">
+            <div id="auth-buttons">
+                <button id="login-btn" class="auth-btn">Se connecter</button>
+                <button id="register-btn" class="auth-btn">S'inscrire</button>
+            </div>
+            <div id="user-info" style="display: none;">
+                <span id="username"></span>
+                <button id="tickets-btn" class="nav-btn">Mes Billets</button>
+                <button id="cart-btn" class="nav-btn">
+                    Panier <span id="cart-count">0</span>
+                </button>
+                <button id="logout-btn">Déconnexion</button>
+            </div>
         </div>
-      </div>
     </header>
 
     <!-- Modal de connexion/inscription -->
     <div id="auth-modal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <div id="login-form">
-          <h2>Connexion</h2>
-          <div class="form-group">
-            <input
-              type="text"
-              id="login-username"
-              placeholder="Nom d'utilisateur"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <input
-              type="password"
-              id="login-password"
-              placeholder="Mot de passe"
-              required
-            />
-          </div>
-          <button onclick="handleLogin()">Se connecter</button>
-          <p class="switch-form">
-            Pas encore de compte ?
-            <a href="#" onclick="switchForm('register')">S'inscrire</a>
-          </p>
-        </div>
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="login-form">
+                <h2>Connexion</h2>
+                <div class="form-group">
+                    <input type="text" id="login-username" placeholder="Nom d'utilisateur" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="login-password" placeholder="Mot de passe" required>
+                </div>
+                <button onclick="handleLogin()">Se connecter</button>
+                <p class="switch-form">
+                    Pas encore de compte ? 
+                    <a href="#" onclick="switchForm('register')">S'inscrire</a>
+                </p>
+            </div>
 
-        <div id="register-form" style="display: none">
-          <h2>Inscription</h2>
-          <div class="form-group">
-            <input
-              type="text"
-              id="register-username"
-              placeholder="Nom d'utilisateur"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <input
-              type="email"
-              id="register-email"
-              placeholder="Email"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <input
-              type="password"
-              id="register-password"
-              placeholder="Mot de passe"
-              required
-            />
-            <small class="password-help"
-              >Le mot de passe doit contenir au moins 8 caractères, inclure des
-              lettres majuscules, minuscules, des chiffres et des caractères
-              spéciaux.</small
-            >
-          </div>
-          <button onclick="handleRegister()">S'inscrire</button>
-          <p class="switch-form">
-            Déjà un compte ?
-            <a href="#" onclick="switchForm('login')">Se connecter</a>
-          </p>
+            <div id="register-form" style="display: none;">
+                <h2>Inscription</h2>
+                <div class="form-group">
+                    <input type="text" id="register-username" placeholder="Nom d'utilisateur" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="register-email" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="register-password" placeholder="Mot de passe" required>
+                    <small class="password-help">Le mot de passe doit contenir au moins 8 caractères, inclure des lettres majuscules, minuscules, des chiffres et des caractères spéciaux.</small>
+                </div>
+                <button onclick="handleRegister()">S'inscrire</button>
+                <p class="switch-form">
+                    Déjà un compte ? 
+                    <a href="#" onclick="switchForm('login')">Se connecter</a>
+                </p>
+            </div>
         </div>
-      </div>
     </div>
 
     <!-- Modal d'achat de billets -->
     <div id="purchase-modal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Acheter des billets</h2>
-        <div id="match-details"></div>
-        <div class="ticket-selection">
-          <div class="category-select">
-            <h3>Sélectionnez votre catégorie</h3>
-            <div class="category-options">
-              <div class="category-option">
-                <input
-                  type="radio"
-                  id="silver"
-                  name="category"
-                  value="Silver"
-                />
-                <label for="silver">
-                  <span class="category-name">Silver</span>
-                  <span class="category-price">100€</span>
-                </label>
-              </div>
-              <div class="category-option">
-                <input type="radio" id="gold" name="category" value="Gold" />
-                <label for="gold">
-                  <span class="category-name">Gold</span>
-                  <span class="category-price">200€</span>
-                </label>
-              </div>
-              <div class="category-option">
-                <input
-                  type="radio"
-                  id="platinum"
-                  name="category"
-                  value="Platinum"
-                />
-                <label for="platinum">
-                  <span class="category-name">Platinum</span>
-                  <span class="category-price">300€</span>
-                </label>
-              </div>
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Acheter des billets</h2>
+            <div id="match-details"></div>
+            <div class="ticket-selection">
+                <div class="category-select">
+                    <h3>Sélectionnez votre catégorie</h3>
+                    <div class="category-options">
+                        <div class="category-option">
+                            <input type="radio" id="silver" name="category" value="Silver">
+                            <label for="silver">
+                                <span class="category-name">Silver</span>
+                                <span class="category-price">100€</span>
+                            </label>
+                        </div>
+                        <div class="category-option">
+                            <input type="radio" id="gold" name="category" value="Gold">
+                            <label for="gold">
+                                <span class="category-name">Gold</span>
+                                <span class="category-price">200€</span>
+                            </label>
+                        </div>
+                        <div class="category-option">
+                            <input type="radio" id="platinum" name="category" value="Platinum">
+                            <label for="platinum">
+                                <span class="category-name">Platinum</span>
+                                <span class="category-price">300€</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="quantity-select">
+                        <label for="quantity">Quantité :</label>
+                        <select id="quantity">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="add-to-cart-btn" class="primary-btn">Ajouter au panier</button>
             </div>
-            <div class="quantity-select">
-              <label for="quantity">Quantité :</label>
-              <select id="quantity">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-              </select>
-            </div>
-          </div>
-          <button id="add-to-cart-btn" class="primary-btn">
-            Ajouter au panier
-          </button>
         </div>
-      </div>
     </div>
 
     <!-- Modal du panier -->
     <div id="cart-modal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Mon Panier</h2>
-        <div id="cart-items"></div>
-        <div class="cart-summary">
-          <p>Total : <span id="cart-total">0€</span></p>
-          <button id="checkout-btn" class="primary-btn">
-            Valider la commande
-          </button>
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Mon Panier</h2>
+            <div id="cart-items"></div>
+            <div class="cart-summary">
+                <p>Total : <span id="cart-total">0€</span></p>
+                <button id="checkout-btn" class="primary-btn">Valider la commande</button>
+            </div>
         </div>
-      </div>
     </div>
 
-    <!-- Modal des billets -->
-    <div id="tickets-modal" class="modal">
-      <div class="modal-content">
+ <!-- Modal des billets -->
+<div id="tickets-modal" class="modal">
+    <div class="modal-content">
         <span class="close">&times;</span>
         <h2>Mes billets</h2>
         <div id="tickets-container">
-          <!-- Les billets seront ajoutés ici dynamiquement -->
+            <!-- Les billets seront ajoutés ici dynamiquement -->
         </div>
-      </div>
     </div>
+</div>
 
     <main>
-      <section id="matches" class="matches-grid">
-        <!-- Les matchs seront ajoutés ici dynamiquement -->
-      </section>
+        <section id="matches" class="matches-grid">
+            <!-- Les matchs seront ajoutés ici dynamiquement -->
+        </section>
     </main>
 
     <footer>
-      <p>&copy; 2024 Comité International Olympique. Tous droits réservés.</p>
+        <p>&copy; 2024 Comité International Olympique. Tous droits réservés.</p>
     </footer>
-  </body>
+</body>
 </html>

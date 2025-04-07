@@ -36,15 +36,13 @@ async function handleLogin() {
             updateAuthUI();
             closeModal('auth-modal');
             loadMatches();
-            
-            // Charger les billets après la connexion
-            loadUserTickets();
+            // Charger le panier si existant
+            loadCart();
         } else {
-            console.error("Erreur de connexion:", data);
             alert(data.message || "Erreur lors de la connexion");
         }
     } catch (error) {
-        console.error('Erreur de connexion:', error);
+        console.error('Erreur:', error);
         alert('Erreur lors de la connexion');
     }
 }

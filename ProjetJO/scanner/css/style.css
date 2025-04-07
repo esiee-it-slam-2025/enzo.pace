@@ -51,11 +51,17 @@ h1 {
     margin: 0 auto;
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid #ddd;
 }
 
 .upload-section {
     text-align: center;
     margin: 2rem 0;
+}
+
+.upload-section p {
+    margin: 1rem 0;
+    color: #666;
 }
 
 .upload-section input[type="file"] {
@@ -70,6 +76,13 @@ h1 {
     cursor: pointer;
     display: inline-block;
     margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.upload-section label:hover {
+    background-color: #1515a0;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .result-card {
@@ -78,6 +91,7 @@ h1 {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-top: 2rem;
+    transition: all 0.3s ease;
 }
 
 .valid-badge, .error-badge {
@@ -86,6 +100,7 @@ h1 {
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 1rem;
+    font-weight: bold;
 }
 
 .valid-badge {
@@ -100,19 +115,38 @@ h1 {
 
 .ticket-details {
     margin-top: 1rem;
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
 }
 
 .ticket-details h3 {
     color: var(--primary-color);
     margin-bottom: 1rem;
+    font-family: var(--font-paris);
 }
 
 .ticket-details p {
     margin: 0.5rem 0;
+    line-height: 1.6;
 }
 
 .hidden {
     display: none;
+}
+
+#result-section.success .result-card {
+    border-left: 5px solid var(--success-color);
+}
+
+#result-section.error .result-card {
+    border-left: 5px solid var(--error-color);
+}
+
+.error-message {
+    color: var(--error-color);
+    font-weight: bold;
+    text-align: center;
+    margin-top: 1rem;
 }
 
 /* Responsive */
@@ -123,5 +157,13 @@ h1 {
 
     #reader {
         width: 100%;
+    }
+    
+    .ticket-details h3 {
+        font-size: 1.2rem;
+    }
+    
+    .ticket-details p {
+        font-size: 0.9rem;
     }
 }
