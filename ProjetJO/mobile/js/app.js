@@ -310,9 +310,6 @@ function displayTickets(tickets) {
             timeStyle: 'short'
         });
         
-        // Assurez-vous que l'ID est bien nettoyé
-        const cleanId = ticket.id.replace(/[^a-zA-Z0-9]/g, '');
-        
         ticketElement.innerHTML = `
             <h3>${ticket.match.team_home} vs ${ticket.match.team_away}</h3>
             <div class="ticket-details">
@@ -322,7 +319,7 @@ function displayTickets(tickets) {
                 <p>Catégorie: <span class="ticket-category">${ticket.category}</span></p>
             </div>
             <div class="qr-code">
-                <canvas id="qr-${cleanId}"></canvas>
+                <canvas id="qr-${ticket.id.replaceAll('-', '')}"></canvas>
             </div>
             <button class="view-ticket-btn" onclick="handleTicket('${ticket.id}', this.parentElement)">
                 Voir le billet
@@ -334,12 +331,14 @@ function displayTickets(tickets) {
         // Attendre que le DOM soit mis à jour
         setTimeout(() => {
             try {
-                const qrElement = document.getElementById(`qr-${cleanId}`);
+                const qrElementId = `qr-${ticket.id.replaceAll('-', '')}`;
+                const qrElement = document.getElementById(qrElementId);
                 if (qrElement) {
+                    console.log(`Génération du QR code pour ${qrElementId} avec données: ${ticket.id}`);
                     // Utiliser directement l'ID du ticket comme donnée du QR code
                     new QRious({
                         element: qrElement,
-                        value: ticket.id, // Utiliser directement l'ID
+                        value: ticket.id,
                         size: 150,
                         level: 'H', // Haute correction d'erreur
                         background: 'white',
@@ -347,7 +346,7 @@ function displayTickets(tickets) {
                         padding: 10
                     });
                 } else {
-                    console.error(`Élément QR non trouvé pour le ticket ${ticket.id}`);
+                    console.error(`Élément QR non trouvé pour le ticket ${ticket.id}, élément recherché: ${qrElementId}`);
                 }
             } catch (error) {
                 console.error(`Erreur lors de la génération du QR code pour le ticket ${ticket.id}:`, error);

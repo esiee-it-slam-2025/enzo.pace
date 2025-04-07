@@ -11,72 +11,69 @@ class QRHandler {
         });
     }
 
- // Modifier la méthode de création d'image de ticket
- static async createTicketImage(ticket) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Taille du canvas
-    canvas.width = 600;
-    canvas.height = 800;
-    
-    // Fond blanc
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    static async createTicketImage(ticket) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Taille du canvas
+        canvas.width = 600;
+        canvas.height = 800;
+        
+        // Fond blanc
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Style du titre
-    ctx.fillStyle = '#1C1CAD';
-    ctx.font = 'bold 30px Arial';
-    ctx.textAlign = 'center';
-    
-    // Titre
-    ctx.fillText('BILLET OFFICIEL - JO 2024', canvas.width / 2, 100);
-    
-    // Informations du match
-    ctx.fillStyle = 'black';
-    ctx.font = '20px Arial';
-    const teams = `${ticket.match.team_home || 'À déterminer'} vs ${ticket.match.team_away || 'À déterminer'}`;
-    ctx.fillText(teams, canvas.width / 2, 150);
-    
-    // Stade et date
-    const date = new Date(ticket.match.start).toLocaleString('fr-FR', {
-        dateStyle: 'long',
-        timeStyle: 'short'
-    });
-    ctx.fillText(`Stade: ${ticket.match.stadium}`, canvas.width / 2, 200);
-    ctx.fillText(`Date: ${date}`, canvas.width / 2, 250);
-    
-    // Catégorie et prix
-    ctx.fillText(`Catégorie: ${ticket.category}`, canvas.width / 2, 300);
-    ctx.fillText(`Prix: ${ticket.price}`, canvas.width / 2, 350);
+        // Style du titre
+        ctx.fillStyle = '#1C1CAD';
+        ctx.font = 'bold 30px Arial';
+        ctx.textAlign = 'center';
+        
+        // Titre
+        ctx.fillText('BILLET OFFICIEL - JO 2024', canvas.width / 2, 100);
+        
+        // Informations du match
+        ctx.fillStyle = 'black';
+        ctx.font = '20px Arial';
+        const teams = `${ticket.match.team_home || 'À déterminer'} vs ${ticket.match.team_away || 'À déterminer'}`;
+        ctx.fillText(teams, canvas.width / 2, 150);
+        
+        // Stade et date
+        const date = new Date(ticket.match.start).toLocaleString('fr-FR', {
+            dateStyle: 'long',
+            timeStyle: 'short'
+        });
+        ctx.fillText(`Stade: ${ticket.match.stadium}`, canvas.width / 2, 200);
+        ctx.fillText(`Date: ${date}`, canvas.width / 2, 250);
+        
+        // Catégorie et prix
+        ctx.fillText(`Catégorie: ${ticket.category}`, canvas.width / 2, 300);
+        ctx.fillText(`Prix: ${ticket.price}€`, canvas.width / 2, 350);
 
-    // Générer le QR Code
-    const qrCanvas = document.createElement('canvas');
-    // Le QR code contient maintenant plus d'informations
-    const qrData = `ID:${ticket.id}|Event:${ticket.match.id}|Category:${ticket.category}`;
-    new QRious({
-        element: qrCanvas,
-        value: qrData,
-        size: 250,
-        level: 'H'
-    });
+        // Générer le QR Code - SIMPLIFIÉ : on utilise seulement l'ID du ticket
+        const qrCanvas = document.createElement('canvas');
+        const qrData = ticket.id; // Utiliser seulement l'ID du ticket
+        new QRious({
+            element: qrCanvas,
+            value: qrData,
+            size: 250,
+            level: 'H'
+        });
 
-    // Dessiner le QR Code
-    ctx.drawImage(qrCanvas, (canvas.width - 250) / 2, 400, 250, 250);
-    
-    // Informations légales
-    ctx.font = '14px Arial';
-    ctx.fillStyle = '#666';
-    ctx.fillText('Ce billet est unique et ne peut être utilisé qu\'une seule fois.', canvas.width / 2, 700);
-    ctx.fillText('Billet officiel des Jeux Olympiques Paris 2024', canvas.width / 2, 730);
-    
-    // ID du billet
-    ctx.font = '12px Arial';
-    ctx.fillText(`ID: ${ticket.id}`, canvas.width / 2, 760);
+        // Dessiner le QR Code
+        ctx.drawImage(qrCanvas, (canvas.width - 250) / 2, 400, 250, 250);
+        
+        // Informations légales
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#666';
+        ctx.fillText('Ce billet est unique et ne peut être utilisé qu\'une seule fois.', canvas.width / 2, 700);
+        ctx.fillText('Billet officiel des Jeux Olympiques Paris 2024', canvas.width / 2, 730);
+        
+        // ID du billet
+        ctx.font = '12px Arial';
+        ctx.fillText(`ID: ${ticket.id}`, canvas.width / 2, 760);
 
-    return canvas;
-}
-
+        return canvas;
+    }
 
     static async downloadTicket(ticketId, ticket) {
         const canvas = await this.createTicketImage(ticket);
@@ -108,13 +105,13 @@ class QRHandler {
                         </div>
                         <div class="match-details">
                             <p><strong>Stade :</strong> ${ticket.match.stadium}</p>
-                            <p><strong>Date :</strong> ${ticket.match.start}</p>
+                            <p><strong>Date :</strong> ${new Date(ticket.match.start).toLocaleString('fr-FR')}</p>
                             <p><strong>Catégorie :</strong> <span class="ticket-category">${ticket.category}</span></p>
-                            <p><strong>Prix :</strong> ${ticket.price}</p>
+                            <p><strong>Prix :</strong> ${ticket.price}€</p>
                         </div>
                     </div>
                     <div class="ticket-qr-code">
-                        <div id="ticket-qr-container"></div>
+                        <canvas id="ticket-qr-canvas" width="250" height="250"></canvas>
                     </div>
                 </div>
                 <div class="ticket-view-actions">
@@ -163,6 +160,7 @@ class QRHandler {
     
             .ticket-view-body {
                 display: flex;
+                flex-direction: column;
                 padding: 20px;
                 gap: 20px;
             }
@@ -249,19 +247,19 @@ class QRHandler {
         document.body.appendChild(modalContainer);
     
         // Générer le QR Code
-        const qrContainer = document.getElementById('ticket-qr-container');
-        console.log('Conteneur QR Code:', qrContainer);
-        console.log('Données QR Code:', ticket.qr_code_data);
+        const qrCanvas = document.getElementById('ticket-qr-canvas');
+        console.log('Génération du QR code avec ID:', ticket.id);
     
         try {
             new QRious({
-                element: qrContainer,
-                value: ticket.qr_code_data,
+                element: qrCanvas,
+                value: ticket.id, // Utiliser uniquement l'ID du ticket
                 size: 250,
                 level: 'H'
             });
         } catch (error) {
             console.error('Erreur lors de la génération du QR Code:', error);
+            const qrContainer = qrCanvas.parentElement;
             qrContainer.innerHTML = '<p>Impossible de générer le QR Code</p>';
         }
     
@@ -280,32 +278,12 @@ class QRHandler {
     }
 }
 
-// Fonction globale pour télécharger ou visualiser un ticket
+// Fonction globale pour afficher les détails d'un ticket
 function handleTicket(ticketId, ticketElement) {
     console.log('handleTicket appelé', ticketId, ticketElement);
     
     try {
-        // Déboguer la récupération du QR code
-        const qrCodeContainer = ticketElement.querySelector('.qr-code');
-        const qrCodeCanvas = qrCodeContainer.querySelector('canvas');
-        const qrCodeImg = qrCodeContainer.querySelector('img');
-
-        console.log('Conteneur QR Code:', qrCodeContainer);
-        console.log('Canvas QR Code:', qrCodeCanvas);
-        console.log('Image QR Code:', qrCodeImg);
-
-        let qrCodeData;
-        if (qrCodeCanvas) {
-            qrCodeData = qrCodeCanvas.toDataURL();
-            console.log('QR Code via Canvas:', qrCodeData);
-        } else if (qrCodeImg) {
-            qrCodeData = qrCodeImg.src;
-            console.log('QR Code via Image:', qrCodeData);
-        } else {
-            console.error('Aucun QR code trouvé');
-            qrCodeData = 'Données QR non disponibles';
-        }
-
+        // Extraire les informations du ticket à partir du DOM
         const ticket = {
             id: ticketId,
             match: {
@@ -315,8 +293,7 @@ function handleTicket(ticketId, ticketElement) {
                 start: ticketElement.querySelector('.ticket-details p:nth-child(2)').textContent.split(': ')[1]
             },
             category: ticketElement.querySelector('.ticket-category').textContent,
-            price: ticketElement.querySelector('.ticket-details p:nth-child(3)').textContent.split(': ')[1],
-            qr_code_data: qrCodeData
+            price: ticketElement.querySelector('.ticket-details p:nth-child(3)').textContent.split(': ')[1]
         };
 
         console.log('Ticket à afficher:', ticket);
@@ -325,17 +302,4 @@ function handleTicket(ticketId, ticketElement) {
         console.error('Erreur lors de la récupération des informations du ticket:', error);
         alert('Impossible de charger les détails du ticket');
     }
-}
-
-// Modifier la fonction de téléchargement
-function downloadTicket(ticketId) {
-    const ticketContainer = document.getElementById(`qr-${ticketId}`).closest('.ticket-card');
-    const matchInfo = {
-        team_home: ticketContainer.querySelector('h3').textContent.split(' vs ')[0],
-        team_away: ticketContainer.querySelector('h3').textContent.split(' vs ')[1],
-        stadium: ticketContainer.querySelector('.ticket-details p:nth-child(1)').textContent.split(': ')[1],
-        start: ticketContainer.querySelector('.ticket-details p:nth-child(2)').textContent.split(': ')[1]
-    };
-    
-    QRHandler.downloadTicket(ticketId, matchInfo);
 }

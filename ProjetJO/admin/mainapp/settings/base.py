@@ -99,11 +99,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Gestion des autorisations et CORS
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:5500",  # Adresse URL locale sur le port Live Server
+    "http://127.0.0.1:5500",  # Adresse URL local sur le port Live Server
+    "http://localhost:5500",  # Alternative locale
 ]
 ALLOWED_HOSTS = [
     "127.0.0.1",  # Pour les tests en local
+    "localhost",  # Alternative locale
 ]
 
 # ✅ Configuration de l'authentification

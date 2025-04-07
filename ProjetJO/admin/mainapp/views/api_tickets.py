@@ -13,52 +13,24 @@ import uuid
 def list_user_tickets(request):
     """Récupère tous les billets de l'utilisateur connecté"""
     try:
-        # Requête SQL directe pour éviter les problèmes de conversion UUID
-        from django.db import connection
+        tickets = Ticket.objects.filter(user=request.user).select_related('event', 'event__stadium', 'event__team_home', 'event__team_away')
         
-        user_id = request.user.id
         tickets_data = []
-        
-        with connection.cursor() as cursor:
-            # Utiliser une requête SQL directe qui ne dépend pas de la conversion UUID
-            cursor.execute("""
-                SELECT 
-                    t.id, t.category, t.price, t.purchase_date, 
-                    e.start, 
-                    home.name as team_home_name, 
-                    away.name as team_away_name, 
-                    s.name as stadium_name
-                FROM 
-                    mainapp_ticket t
-                JOIN 
-                    mainapp_event e ON t.event_id = e.id
-                JOIN 
-                    mainapp_stadium s ON e.stadium_id = s.id
-                LEFT JOIN 
-                    mainapp_team home ON e.team_home_id = home.id
-                LEFT JOIN 
-                    mainapp_team away ON e.team_away_id = away.id
-                WHERE 
-                    t.user_id = %s
-            """, [user_id])
-            
-            columns = [col[0] for col in cursor.description]
-            tickets_raw = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            
-            for ticket in tickets_raw:
-                tickets_data.append({
-                    'id': ticket['id'],
-                    'match': {
-                        'team_home': ticket['team_home_name'] or "À déterminer",
-                        'team_away': ticket['team_away_name'] or "À déterminer",
-                        'stadium': ticket['stadium_name'],
-                        'start': ticket['start'],
-                    },
-                    'category': ticket['category'],
-                    'price': str(ticket['price']),
-                    'purchase_date': ticket['purchase_date'],
-                    'qr_code_data': ticket['id']
-                })
+        for ticket in tickets:
+            tickets_data.append({
+                'id': ticket.id,
+                'match': {
+                    'id': ticket.event.id,
+                    'team_home': ticket.event.team_home.name if ticket.event.team_home else "À déterminer",
+                    'team_away': ticket.event.team_away.name if ticket.event.team_away else "À déterminer",
+                    'stadium': ticket.event.stadium.name,
+                    'start': ticket.event.start,
+                },
+                'category': ticket.category,
+                'price': str(ticket.price),
+                'purchase_date': ticket.purchase_date,
+                'qr_code_data': ticket.id  # Simplifier pour utiliser directement l'ID
+            })
         
         return Response(tickets_data)
     except Exception as e:
@@ -77,7 +49,6 @@ def buy_ticket(request):
         data = request.data
         print("Données reçues:", data)
         
-        # Solution simple : utiliser directement match_id
         match_id = data.get('match_id')
         category = data.get('category')
         
@@ -101,7 +72,7 @@ def buy_ticket(request):
                 "message": f"Catégorie invalide: {category}. Choisissez parmi: {', '.join(valid_categories)}"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Créer le ticket avec un UUID correctement formaté
+        # Créer le ticket
         ticket = Ticket(
             event=event,
             user=request.user,
@@ -117,8 +88,9 @@ def buy_ticket(request):
         return Response({
             "message": "Billet acheté avec succès",
             "ticket": {
-                "id": str(ticket.id),
+                "id": ticket.id,
                 "match": {
+                    "id": event.id,
                     "team_home": team_home_name,
                     "team_away": team_away_name,
                     "stadium": stadium_name,
@@ -126,7 +98,7 @@ def buy_ticket(request):
                 },
                 "category": ticket.category,
                 "price": str(ticket.price),
-                "qr_code_data": str(ticket.id)
+                "qr_code_data": ticket.id
             }
         }, status=status.HTTP_201_CREATED)
 
@@ -136,30 +108,50 @@ def buy_ticket(request):
         return Response({
             "message": f"Une erreur est survenue: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# Dans la fonction verify_ticket, modifier le parsing du ticket
+
 @api_view(['GET'])
+# Enlevez le décorateur permission_classes si présent
 def verify_ticket(request, ticket_id):
     """Vérifie la validité d'un billet via son QR code"""
     try:
-        # Gérer plusieurs formats de ticket_id
-        # Enlever tout préfixe éventuel
-        if ticket_id.startswith('ID:'):
-            ticket_id = ticket_id.split('|')[0].split(':')[1]
-
-        ticket = Ticket.objects.get(id=ticket_id)
-
+        # Nettoyer l'ID du ticket
+        clean_ticket_id = ticket_id.strip()
+        
+        # Gestion plus robuste des formats possibles
+        if 'ID:' in clean_ticket_id and '|' in clean_ticket_id:
+            clean_ticket_id = clean_ticket_id.split('|')[0].split('ID:')[1].strip()
+        
+        print(f"Vérification du ticket ID: {clean_ticket_id}")
+        
+        # Récupérer le ticket avec les relations
+        ticket = Ticket.objects.select_related(
+            'event', 'event__stadium', 'event__team_home', 'event__team_away', 'user'
+        ).get(id=clean_ticket_id)
+        
+        # Informations de l'événement
+        team_home_name = ticket.event.team_home.name if ticket.event.team_home else "À déterminer"
+        team_away_name = ticket.event.team_away.name if ticket.event.team_away else "À déterminer"
+        
+        # Marquer le ticket comme utilisé (optionnel)
+        # ticket.used = True
+        # ticket.save()
+        
         return Response({
             "valid": True,
             "ticket": {
                 "id": ticket.id,
                 "match": {
-                    "name": f"{ticket.event.team_home or 'À déterminer'} vs {ticket.event.team_away or 'À déterminer'}",
+                    "id": ticket.event.id,
+                    "name": f"{team_home_name} vs {team_away_name}",
                     "start": ticket.event.start,
+                    "team_home": team_home_name,
+                    "team_away": team_away_name,
                     "stadium": ticket.event.stadium.name
                 },
                 "category": ticket.category,
                 "price": str(ticket.price),
-                "user": ticket.user.username
+                "user": ticket.user.username,
+                "used": ticket.used
             }
         })
     except Ticket.DoesNotExist:
@@ -167,23 +159,6 @@ def verify_ticket(request, ticket_id):
             "valid": False,
             "message": "Billet non trouvé"
         }, status=status.HTTP_404_NOT_FOUND)
-        
-        return Response({
-            "valid": True,
-            "ticket": {
-                "id": ticket_data['id'],
-                "match": {
-                    "name": f"{ticket_data['team_home_name'] or 'À déterminer'} vs {ticket_data['team_away_name'] or 'À déterminer'}",
-                    "start": ticket_data['start'],
-                    "team_home": ticket_data['team_home_name'] or "À déterminer",
-                    "team_away": ticket_data['team_away_name'] or "À déterminer",
-                    "stadium": ticket_data['stadium_name']
-                },
-                "category": ticket_data['category'],
-                "price": str(ticket_data['price']),
-                "user": ticket_data['username']
-            }
-        })
     except Exception as e:
         import traceback
         traceback.print_exc()
