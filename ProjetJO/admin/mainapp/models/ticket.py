@@ -1,7 +1,6 @@
 from django.db import models
 import uuid
 
-
 class Ticket(models.Model):
     CATEGORY_CHOICES = [
         ('Silver', 'Silver'),
@@ -9,7 +8,7 @@ class Ticket(models.Model):
         ('Platinum', 'Platinum'),
     ]
 
-    id = models.CharField(primary_key=True, max_length=36, default=uuid.uuid4, editable=False)
+    id = models.CharField(primary_key=True, max_length=36, default=uuid.uuid4)
     match = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='tickets')
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='tickets')
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
@@ -21,5 +20,7 @@ class Ticket(models.Model):
 
     @property
     def qr_code_data(self):
-        """Return the data to encode in the QR code."""
+        """
+        Return the data to encode in the QR code.
+        """
         return str(self.id)

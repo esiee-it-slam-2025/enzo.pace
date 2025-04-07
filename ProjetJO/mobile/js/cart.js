@@ -13,12 +13,12 @@ function addToCart(matchId, category, quantity, matchInfo) {
         return;
     }
 
-    // Vérifier si le match n'est pas terminé
-    const matchDate = new Date(matchInfo.start);
-    if (matchDate < new Date() || matchInfo.is_finished) {
-        showNotification("Ce match est terminé, vous ne pouvez plus acheter de billets", "error");
-        return;
-    }
+    // COMMENTEZ OU SUPPRIMEZ CETTE VÉRIFICATION
+    // const matchDate = new Date(matchInfo.start);
+    // if (matchDate < new Date() || matchInfo.is_finished) {
+    //     showNotification("Ce match est terminé, vous ne pouvez plus acheter de billets", "error");
+    //     return;
+    // }
 
     const prices = {
         'Silver': 100,
@@ -48,6 +48,74 @@ function addToCart(matchId, category, quantity, matchInfo) {
     showNotification("Billets ajoutés au panier !", "success");
 }
 
+function displayCart() {
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+    cartItems.innerHTML = '';
+
+    if (cart.length === 0) {
+        cartItems.innerHTML = '<p class="empty-cart">Votre panier est vide</p>';
+        cartTotal.textContent = '0€';
+        return;
+    }
+
+    let total = 0;
+    cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+
+        // MODIFIEZ CETTE LIGNE pour désactiver la vérification de date
+        // const matchDate = new Date(item.matchInfo.start);
+        // const isMatchValid = matchDate > new Date() && !item.matchInfo.is_finished;
+        const isMatchValid = true; // Toujours valide pour les tests
+
+        const cartItemDiv = document.createElement('div');
+        cartItemDiv.className = 'cart-item';
+        cartItemDiv.innerHTML = `
+            <div class="cart-item-info">
+                <h3>${item.matchInfo.team_home_name || 'À déterminer'} vs ${item.matchInfo.team_away_name || 'À déterminer'}</h3>
+                <p>${item.matchInfo.stadium_name}</p>
+                <p>${new Date(item.matchInfo.start).toLocaleString('fr-FR')}</p>
+                <p>Catégorie : ${item.category}</p>
+                <p>Quantité : ${item.quantity}</p>
+                <p>Prix unitaire : ${item.price}€</p>
+                ${!isMatchValid ? '<p class="error-text">Ce match n\'est plus disponible</p>' : ''}
+            </div>
+            <div class="cart-item-actions">
+                <p class="item-total">${itemTotal}€</p>
+                <button onclick="removeFromCart(${index})" class="remove-btn">Supprimer</button>
+            </div>
+        `;
+        cartItems.appendChild(cartItemDiv);
+
+        // COMMENTEZ OU SUPPRIMEZ CE BLOC
+        // // Si le match n'est plus valide, on le supprime automatiquement après un délai
+        // if (!isMatchValid) {
+        //     setTimeout(() => {
+        //         removeFromCart(index);
+        //         showNotification("Un match expiré a été retiré de votre panier", "info");
+        //     }, 3000);
+        // }
+    });
+
+    cartTotal.textContent = `${total}€`;
+}
+
+function loadCart() {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+        cart = JSON.parse(savedCart);
+        // MODIFIEZ CETTE PARTIE pour désactiver le nettoyage automatique
+        // // Nettoyer le panier des matchs expirés au chargement
+        // cart = cart.filter(item => {
+        //     const matchDate = new Date(item.matchInfo.start);
+        //     return matchDate > new Date() && !item.matchInfo.is_finished;
+        // });
+        updateCartCount();
+        saveCart(); // Sauvegarder le panier nettoyé
+    }
+}
+
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
@@ -73,55 +141,6 @@ function updateCartCount() {
     cartCount.textContent = totalItems;
 }
 
-function displayCart() {
-    const cartItems = document.getElementById('cart-items');
-    const cartTotal = document.getElementById('cart-total');
-    cartItems.innerHTML = '';
-
-    if (cart.length === 0) {
-        cartItems.innerHTML = '<p class="empty-cart">Votre panier est vide</p>';
-        cartTotal.textContent = '0€';
-        return;
-    }
-
-    let total = 0;
-    cart.forEach((item, index) => {
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-
-        const matchDate = new Date(item.matchInfo.start);
-        const isMatchValid = matchDate > new Date() && !item.matchInfo.is_finished;
-
-        const cartItemDiv = document.createElement('div');
-        cartItemDiv.className = 'cart-item';
-        cartItemDiv.innerHTML = `
-            <div class="cart-item-info">
-                <h3>${item.matchInfo.team_home_name || 'À déterminer'} vs ${item.matchInfo.team_away_name || 'À déterminer'}</h3>
-                <p>${item.matchInfo.stadium_name}</p>
-                <p>${new Date(item.matchInfo.start).toLocaleString('fr-FR')}</p>
-                <p>Catégorie : ${item.category}</p>
-                <p>Quantité : ${item.quantity}</p>
-                <p>Prix unitaire : ${item.price}€</p>
-                ${!isMatchValid ? '<p class="error-text">Ce match n\'est plus disponible</p>' : ''}
-            </div>
-            <div class="cart-item-actions">
-                <p class="item-total">${itemTotal}€</p>
-                <button onclick="removeFromCart(${index})" class="remove-btn">Supprimer</button>
-            </div>
-        `;
-        cartItems.appendChild(cartItemDiv);
-
-        // Si le match n'est plus valide, on le supprime automatiquement après un délai
-        if (!isMatchValid) {
-            setTimeout(() => {
-                removeFromCart(index);
-                showNotification("Un match expiré a été retiré de votre panier", "info");
-            }, 3000);
-        }
-    });
-
-    cartTotal.textContent = `${total}€`;
-}
 
 function removeFromCart(index) {
     cart.splice(index, 1);
@@ -135,19 +154,6 @@ function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
 }
 
-function loadCart() {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-        cart = JSON.parse(savedCart);
-        // Nettoyer le panier des matchs expirés au chargement
-        cart = cart.filter(item => {
-            const matchDate = new Date(item.matchInfo.start);
-            return matchDate > new Date() && !item.matchInfo.is_finished;
-        });
-        updateCartCount();
-        saveCart(); // Sauvegarder le panier nettoyé
-    }
-}
 
 function clearCart() {
     cart = [];
@@ -166,61 +172,53 @@ async function checkout() {
         return;
     }
 
-    // En mode test, nous n'empêchons pas l'achat de billets pour des matchs passés
-    // Décommentez ce bloc en production
-    /*
-    // Vérifier si tous les matchs sont toujours valides
-    const invalidMatches = cart.filter(item => {
-        const matchDate = new Date(item.matchInfo.start);
-        return matchDate <= new Date() || item.matchInfo.is_finished;
-    });
-
-    if (invalidMatches.length > 0) {
-        showNotification("Certains matchs ne sont plus disponibles. Veuillez vérifier votre panier.", "error");
-        displayCart(); // Rafraîchir l'affichage du panier
-        return;
-    }
-    */
-
     try {
         const API_URL = 'http://127.0.0.1:8000';
-
-        const tickets = cart.map(item => ({
-            match_id: item.matchId,
-            category: item.category,
-            price: item.price,
-            quantity: item.quantity
-        }));
-
-        console.log("Tickets à acheter:", tickets);
+        const csrfToken = getCookie('csrftoken');
+        
+        console.log("Contenu du panier:", cart);
+        console.log("CSRF Token:", csrfToken);
 
         // Envoi de chaque ticket individuellement
         const purchasedTickets = [];
-        for (const ticket of tickets) {
-            for (let i = 0; i < ticket.quantity; i++) {
-                console.log(`Achat du billet ${i+1}/${ticket.quantity} pour le match ${ticket.match_id}, catégorie ${ticket.category}`);
+        for (const item of cart) {
+            for (let i = 0; i < item.quantity; i++) {
+                console.log(`Achat du billet ${i+1}/${item.quantity} pour le match ${item.matchId}, catégorie ${item.category}`);
+                
+                const requestData = {
+                    match_id: item.matchId,
+                    category: item.category
+                };
+                
+                console.log("Données envoyées:", requestData);
+                
                 const response = await fetch(`${API_URL}/api/tickets/buy/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
+                        'X-CSRFToken': csrfToken
                     },
                     credentials: 'include',
-                    body: JSON.stringify({
-                        match_id: ticket.match_id,
-                        category: ticket.category,
-                        price: ticket.price
-                    })
+                    body: JSON.stringify(requestData)
                 });
 
+                const responseText = await response.text();
+                console.log("Réponse brute:", responseText);
+                
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    console.error("Erreur de parsing de la réponse JSON:", e);
+                    throw new Error("Format de réponse invalide");
+                }
+                
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error("Erreur lors de l'achat:", errorText);
-                    throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
+                    console.error("Erreur HTTP:", response.status, responseData);
+                    throw new Error(responseData.message || "Erreur lors de l'achat du billet");
                 }
 
-                const responseData = await response.json();
-                console.log("Réponse du serveur:", responseData);
+                console.log("Billet acheté:", responseData);
                 purchasedTickets.push(responseData.ticket);
             }
         }
@@ -228,6 +226,8 @@ async function checkout() {
         showNotification("Commande validée avec succès !", "success");
         clearCart();
         closeModal('cart-modal');
+        
+        // Charger les billets achetés
         loadUserTickets();
 
     } catch (error) {

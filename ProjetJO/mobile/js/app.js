@@ -206,6 +206,48 @@ function openPurchaseModal(match) {
     document.getElementById('purchase-modal').style.display = 'block';
 }
 
+function addToCart(matchId, category, quantity, matchInfo) {
+    // Vérification de la connexion
+    if (!currentUser) {
+        showNotification("Veuillez vous connecter pour ajouter des billets au panier", "error");
+        return;
+    }
+
+    // Validation des données
+    if (!matchId || !category || !quantity) {
+        showNotification("Informations du billet incomplètes", "error");
+        return;
+    }
+
+    // Calculer le prix en fonction de la catégorie
+    const prices = {
+        'Silver': 100,
+        'Gold': 200,
+        'Platinum': 300
+    };
+
+    // Validation de la catégorie
+    if (!prices[category]) {
+        showNotification("Catégorie de billet invalide", "error");
+        return;
+    }
+
+    const cartItem = {
+        matchId,
+        category,
+        quantity: parseInt(quantity),
+        price: prices[category],
+        matchInfo,
+        addedAt: new Date().toISOString() // Pour tracer quand l'item a été ajouté
+    };
+
+    cart.push(cartItem);
+    updateCartCount();
+    saveCart();
+    closeModal('purchase-modal');
+    showNotification("Billets ajoutés au panier !", "success");
+}
+
 async function loadUserTickets() {
     if (!currentUser) return;
 
