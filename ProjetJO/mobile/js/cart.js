@@ -166,6 +166,9 @@ async function checkout() {
         return;
     }
 
+    // En mode test, nous n'empêchons pas l'achat de billets pour des matchs passés
+    // Décommentez ce bloc en production
+    /*
     // Vérifier si tous les matchs sont toujours valides
     const invalidMatches = cart.filter(item => {
         const matchDate = new Date(item.matchInfo.start);
@@ -177,6 +180,7 @@ async function checkout() {
         displayCart(); // Rafraîchir l'affichage du panier
         return;
     }
+    */
 
     try {
         const API_URL = 'http://127.0.0.1:8000';
@@ -188,10 +192,13 @@ async function checkout() {
             quantity: item.quantity
         }));
 
+        console.log("Tickets à acheter:", tickets);
+
         // Envoi de chaque ticket individuellement
         const purchasedTickets = [];
         for (const ticket of tickets) {
             for (let i = 0; i < ticket.quantity; i++) {
+                console.log(`Achat du billet ${i+1}/${ticket.quantity} pour le match ${ticket.match_id}, catégorie ${ticket.category}`);
                 const response = await fetch(`${API_URL}/api/tickets/buy/`, {
                     method: 'POST',
                     headers: {
@@ -206,12 +213,14 @@ async function checkout() {
                     })
                 });
 
-                const responseData = await response.json();
-
                 if (!response.ok) {
-                    throw new Error(responseData.message || "Erreur lors de la validation de la commande");
+                    const errorText = await response.text();
+                    console.error("Erreur lors de l'achat:", errorText);
+                    throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
                 }
 
+                const responseData = await response.json();
+                console.log("Réponse du serveur:", responseData);
                 purchasedTickets.push(responseData.ticket);
             }
         }
