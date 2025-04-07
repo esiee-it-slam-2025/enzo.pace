@@ -8,8 +8,8 @@ class Ticket(models.Model):
         ('Platinum', 'Platinum'),
     ]
 
-    # Changer le type du champ ID pour qu'il corresponde à la base de données
-    id = models.CharField(primary_key=True, max_length=36, default=lambda: str(uuid.uuid4()).replace('-', ''), editable=False)
+    # Utiliser un UUID lisible
+    id = models.CharField(primary_key=True, max_length=36, default=uuid.uuid4, editable=False)
     event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='tickets')
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='tickets')
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
@@ -23,8 +23,9 @@ class Ticket(models.Model):
     def qr_code_data(self):
         """
         Renvoie les données à encoder dans le QR code.
+        Utiliser un format lisible et structuré
         """
-        return str(self.id)
+        return f"ID:{self.id}|Event:{self.event.id}|Category:{self.category}"
         
     def save(self, *args, **kwargs):
         # Définir le prix en fonction de la catégorie

@@ -11,68 +11,72 @@ class QRHandler {
         });
     }
 
-    static async createTicketImage(ticket) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Taille du canvas
-        canvas.width = 600;
-        canvas.height = 800;
-        
-        // Fond blanc
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+ // Modifier la méthode de création d'image de ticket
+ static async createTicketImage(ticket) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Taille du canvas
+    canvas.width = 600;
+    canvas.height = 800;
+    
+    // Fond blanc
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Style du titre
-        ctx.fillStyle = '#1C1CAD';
-        ctx.font = 'bold 30px Arial';
-        ctx.textAlign = 'center';
-        
-        // Titre
-        ctx.fillText('BILLET OFFICIEL - JO 2024', canvas.width / 2, 100);
-        
-        // Informations du match
-        ctx.fillStyle = 'black';
-        ctx.font = '20px Arial';
-        const teams = `${ticket.match.team_home || 'À déterminer'} vs ${ticket.match.team_away || 'À déterminer'}`;
-        ctx.fillText(teams, canvas.width / 2, 150);
-        
-        // Stade et date
-        const date = new Date(ticket.match.start).toLocaleString('fr-FR', {
-            dateStyle: 'long',
-            timeStyle: 'short'
-        });
-        ctx.fillText(`Stade: ${ticket.match.stadium}`, canvas.width / 2, 200);
-        ctx.fillText(`Date: ${date}`, canvas.width / 2, 250);
-        
-        // Catégorie et prix
-        ctx.fillText(`Catégorie: ${ticket.category}`, canvas.width / 2, 300);
-        ctx.fillText(`Prix: ${ticket.price}`, canvas.width / 2, 350);
+    // Style du titre
+    ctx.fillStyle = '#1C1CAD';
+    ctx.font = 'bold 30px Arial';
+    ctx.textAlign = 'center';
+    
+    // Titre
+    ctx.fillText('BILLET OFFICIEL - JO 2024', canvas.width / 2, 100);
+    
+    // Informations du match
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    const teams = `${ticket.match.team_home || 'À déterminer'} vs ${ticket.match.team_away || 'À déterminer'}`;
+    ctx.fillText(teams, canvas.width / 2, 150);
+    
+    // Stade et date
+    const date = new Date(ticket.match.start).toLocaleString('fr-FR', {
+        dateStyle: 'long',
+        timeStyle: 'short'
+    });
+    ctx.fillText(`Stade: ${ticket.match.stadium}`, canvas.width / 2, 200);
+    ctx.fillText(`Date: ${date}`, canvas.width / 2, 250);
+    
+    // Catégorie et prix
+    ctx.fillText(`Catégorie: ${ticket.category}`, canvas.width / 2, 300);
+    ctx.fillText(`Prix: ${ticket.price}`, canvas.width / 2, 350);
 
-        // Générer le QR Code
-        const qrCanvas = document.createElement('canvas');
-        new QRious({
-            element: qrCanvas,
-            value: ticket.qr_code_data,
-            size: 250,
-            level: 'H'
-        });
+    // Générer le QR Code
+    const qrCanvas = document.createElement('canvas');
+    // Le QR code contient maintenant plus d'informations
+    const qrData = `ID:${ticket.id}|Event:${ticket.match.id}|Category:${ticket.category}`;
+    new QRious({
+        element: qrCanvas,
+        value: qrData,
+        size: 250,
+        level: 'H'
+    });
 
-        // Dessiner le QR Code
-        ctx.drawImage(qrCanvas, (canvas.width - 250) / 2, 400, 250, 250);
-        
-        // Informations légales
-        ctx.font = '14px Arial';
-        ctx.fillStyle = '#666';
-        ctx.fillText('Ce billet est unique et ne peut être utilisé qu\'une seule fois.', canvas.width / 2, 700);
-        ctx.fillText('Billet officiel des Jeux Olympiques Paris 2024', canvas.width / 2, 730);
-        
-        // ID du billet
-        ctx.font = '12px Arial';
-        ctx.fillText(`ID: ${ticket.id}`, canvas.width / 2, 760);
+    // Dessiner le QR Code
+    ctx.drawImage(qrCanvas, (canvas.width - 250) / 2, 400, 250, 250);
+    
+    // Informations légales
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#666';
+    ctx.fillText('Ce billet est unique et ne peut être utilisé qu\'une seule fois.', canvas.width / 2, 700);
+    ctx.fillText('Billet officiel des Jeux Olympiques Paris 2024', canvas.width / 2, 730);
+    
+    // ID du billet
+    ctx.font = '12px Arial';
+    ctx.fillText(`ID: ${ticket.id}`, canvas.width / 2, 760);
 
-        return canvas;
-    }
+    return canvas;
+}
+
 
     static async downloadTicket(ticketId, ticket) {
         const canvas = await this.createTicketImage(ticket);

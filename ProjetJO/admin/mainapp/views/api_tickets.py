@@ -136,51 +136,37 @@ def buy_ticket(request):
         return Response({
             "message": f"Une erreur est survenue: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+# Dans la fonction verify_ticket, modifier le parsing du ticket
 @api_view(['GET'])
 def verify_ticket(request, ticket_id):
     """Vérifie la validité d'un billet via son QR code"""
     try:
-        # Utiliser directement l'ID sans conversion UUID
-        from django.db import connection
-        
-        ticket_data = None
-        
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT 
-                    t.id, t.category, t.price, 
-                    e.start, 
-                    home.name as team_home_name, 
-                    away.name as team_away_name, 
-                    s.name as stadium_name,
-                    u.username
-                FROM 
-                    mainapp_ticket t
-                JOIN 
-                    mainapp_event e ON t.event_id = e.id
-                JOIN 
-                    mainapp_stadium s ON e.stadium_id = s.id
-                JOIN
-                    auth_user u ON t.user_id = u.id
-                LEFT JOIN 
-                    mainapp_team home ON e.team_home_id = home.id
-                LEFT JOIN 
-                    mainapp_team away ON e.team_away_id = away.id
-                WHERE 
-                    t.id = %s
-            """, [ticket_id])
-            
-            result = cursor.fetchone()
-            
-            if not result:
-                return Response({
-                    "valid": False,
-                    "message": "Billet non trouvé"
-                }, status=status.HTTP_404_NOT_FOUND)
-                
-            columns = [col[0] for col in cursor.description]
-            ticket_data = dict(zip(columns, result))
+        # Gérer plusieurs formats de ticket_id
+        # Enlever tout préfixe éventuel
+        if ticket_id.startswith('ID:'):
+            ticket_id = ticket_id.split('|')[0].split(':')[1]
+
+        ticket = Ticket.objects.get(id=ticket_id)
+
+        return Response({
+            "valid": True,
+            "ticket": {
+                "id": ticket.id,
+                "match": {
+                    "name": f"{ticket.event.team_home or 'À déterminer'} vs {ticket.event.team_away or 'À déterminer'}",
+                    "start": ticket.event.start,
+                    "stadium": ticket.event.stadium.name
+                },
+                "category": ticket.category,
+                "price": str(ticket.price),
+                "user": ticket.user.username
+            }
+        })
+    except Ticket.DoesNotExist:
+        return Response({
+            "valid": False,
+            "message": "Billet non trouvé"
+        }, status=status.HTTP_404_NOT_FOUND)
         
         return Response({
             "valid": True,
